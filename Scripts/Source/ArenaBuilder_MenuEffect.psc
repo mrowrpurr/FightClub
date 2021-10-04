@@ -1,1 +1,0 @@
-Scriptname ArenaBuilder_MenuEffect extends ActiveMagicEffect  
