@@ -1,5 +1,4 @@
 scriptName FightClub extends Quest
-monster.SetFactionRank(thisFaction, 3)
 {Manages all of the monster data and everything for Fight Club}
 
 ; TODO - we should make a custom Nazeem
@@ -11,14 +10,15 @@ int NumberOfTeamsAvailable = 8
 bool _loadedFromConfigFile = false
 string property FIGHT_CLUB_CONFIG_FILE = "Data/FightClub/Config.json" autoReadonly
 
-; 1. SAVE MONSTERS and TEAMS locally
-; 2. SPAWN MONSTERS on specific teams
-; 3. "Fight!"
-; 4. DECLARE A WINNER!
-; 5. Cleanup.
-; 6. Player Load Games
-; 7. Nexus!
-; 8. Player Bet using Gold
+; 1. Make Monsters Allies! <---- TODO / Wrking on thi
+
+; 2. DECLARE A WINNER!
+; 3. Cleanup.
+; 4. Player Load Games
+
+; 5. Nexus!
+
+; 6. Player Bet using Gold
 
 int property Data
     int function get()
