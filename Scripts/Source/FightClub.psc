@@ -164,6 +164,18 @@ function RenameTeam(int team, string newName)
     Save()
 endFunction
 
+function AddMonsterToTeam(Actor monster, int team)
+    
+endFunction
+
+Faction[] function AllFactions()
+    
+endFunction
+
+Faction function GetFactionForTeam(int team)
+
+endFunction
+
 ; This saves the configuration to disk!
 function Save()
     JValue.writeToFile(Data, FIGHT_CLUB_CONFIG_FILE)

@@ -101,6 +101,7 @@ function RenameTeam(FightClub fightClubScript) global
     endIf
 endFunction
 
+; TODO - Search!
 function SpawnMonster(FightClub fightClubScript) global
     UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
     listMenu.AddEntryItem("[Search Monsters]")
@@ -122,7 +123,23 @@ function SpawnMonster(FightClub fightClubScript) global
         endIf
         int monster = fightClubScript.GetMonsterByIndex(result - 1) ; -1 because of [Search...]
         Form monsterForm = JMap.getForm(monster, "form")
-        fightClubScript.PlayerRef.PlaceAtMe(monsterForm, numberOfMonsters)
+
+        listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
+        string[] teamNames = fightClubScript.TeamNames
+        i = 0
+        while i < teamNames.Length
+            listMenu.AddEntryItem(teamNames[i])
+            i += 1
+        endWhile
+        listMenu.OpenMenu()
+        int selection = listMenu.GetResultInt()
+        if selection > -1
+            int team = fightClubScript.GetTeamByIndex(selection)
+            Actor monsterInstance = fightClubScript.PlayerRef.PlaceAtMe(monsterForm, numberOfMonsters) as Actor
+            fightClubScript.AddMonsterToTeam(monsterInstance, team)
+        else
+            MainMenu(fightClubScript)
+        endIf
     else
         MainMenu(fightClubScript)
     endIf
