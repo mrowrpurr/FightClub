@@ -90,7 +90,7 @@ function RenameTeam(FightClub fightClubScript) global
         if newName
             int team = fightClubScript.GetTeamByIndex(result)
             string oldName = JMap.getStr(team, "name")
-            JMap.setStr(team, "name", newName)
+            fightClubScript.RenameTeam(team, newName)
             Debug.MessageBox("Renamed " + oldName + " to " + newName)
             MainMenu(fightClubScript)
         else
@@ -131,10 +131,10 @@ endFunction
 function AddMonster(FightClub fightClubScript) global
     string esp = ChooseESP()
     if esp
-        Utility.WaitMenuMode(1.5)
         UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
         textEntry.SetPropertyString("text", "")
         textEntry.OpenMenu()
+
         string formId = textEntry.GetResultString()
         if formId
             Form monsterForm = Game.GetFormFromFile(FormHelper.HexToDecimal(formId), esp)
@@ -142,6 +142,7 @@ function AddMonster(FightClub fightClubScript) global
                 ActorBase monster = monsterForm as ActorBase
                 if monster
                     fightClubScript.AddMonster(monster)
+                    Debug.MessageBox("Added monster " + monster.GetName())
                     ManageMonsters(fightClubScript)
                 else
                     Debug.MessageBox("Form " + formId + " " + monsterForm.GetName() + " in " + esp + " is not an Actor")
@@ -152,9 +153,11 @@ function AddMonster(FightClub fightClubScript) global
                 MainMenu(fightClubScript)
             endIf
         else
+            Debug.MessageBox("You did not enter a form ID")
             MainMenu(fightClubScript)
         endIf
     else
+        Debug.MessageBox("You did not choose an ESP/ESM")
         MainMenu(fightClubScript)
     endIf
 endFunction

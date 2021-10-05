@@ -7,8 +7,31 @@ scriptName FightClub extends Quest
 ; The number of teams available
 int NumberOfTeamsAvailable = 8
 
+bool _loadedFromConfigFile = false
+string property FIGHT_CLUB_CONFIG_FILE = "Data/FightClub/Config.json" autoReadonly
+
+; 1. SAVE MONSTERS and TEAMS locally
+; 2. SPAWN MONSTERS on specific teams
+; 3. "Fight!"
+; 4. DECLARE A WINNER!
+; 5. Cleanup.
+; 6. Player Load Games
+; 7. Nexus!
+; 8. Player Bet using Gold
+
 int property Data
     int function get()
+        ; [TODO] Have this reload for save games
+        if ! _loadedFromConfigFile
+            _loadedFromConfigFile = true
+            ; Load from disk, if available
+            int fightClubData = JValue.readFromFile(FIGHT_CLUB_CONFIG_FILE)
+            if fightClubData
+                JDB.solveObjSetter(".fightClub", fightClubData, createMissingKeys = true)
+                return fightClubData
+            endIf
+        endIf
+
         int fightClubData = JDB.solveObj(".fightClub")
         if ! fightClubData
             fightClubData = JMap.object()
@@ -100,13 +123,8 @@ Faction property FightClub_Team8 auto
 
 ; Install the mod for the first time
 event OnInit()
-    ; Debug.MessageBox(PlayerRef.GetParentCell() + " " + PlayerRef.GetParentCell().GetName() + " " + PlayerRef.GetParentCell().GetFormID())
-    Form hodForm = Game.GetForm(0x1347D)
-    Form guarForm = Game.GetFormFromFile(0x5904, "mihailguar.esp")
     PlayerRef.EquipSpell(FightClub_MenuSpell, 0)
     PlayerRef.EquipSpell(FightClub_MenuSpell, 1)
-    PlayerRef.PlaceAtMe(hodForm)
-    PlayerRef.PlaceAtMe(guarForm)
 endEvent
 
 ; Start arranging fight club match
@@ -137,4 +155,16 @@ int function AddMonster(ActorBase monster)
         name = monster.GetName()
     endIf
     JMap.setStr(monsterMap, "name", name)
+    Save()
+    return monsterMap
+endFunction
+
+function RenameTeam(int team, string newName)
+    JMap.setStr(team, "name", newName)
+    Save()
+endFunction
+
+; This saves the configuration to disk!
+function Save()
+    JValue.writeToFile(Data, FIGHT_CLUB_CONFIG_FILE)
 endFunction
