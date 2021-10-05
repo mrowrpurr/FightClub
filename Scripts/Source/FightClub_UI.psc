@@ -38,6 +38,8 @@ function FightClub_MainMenu_NoMonster(FightClub fightClubScript) global
     int quit = 4
     int result = fightClubScript.FightClub_MainMenu_NoMonster.Show()
     if result == fight
+        Debug.MessageBox("Fight!")
+        fightClubScript.BeginFight()
     elseIf result == spawnMonster
         SpawnMonster(fightClubScript)
     elseIf result == manageMonsters
@@ -62,6 +64,8 @@ function FightClub_MainMenu_WithMonster(FightClub fightClubScript, Actor monster
     if result == editMonster
     elseIf result == duplicateMonster
     elseIf result == fight
+        Debug.MessageBox("Fight!")
+        fightClubScript.BeginFight()
     elseIf result == spawnMonster
         SpawnMonster(fightClubScript)
     elseIf result == manageMonsters
@@ -135,8 +139,12 @@ function SpawnMonster(FightClub fightClubScript) global
         int selection = listMenu.GetResultInt()
         if selection > -1
             int team = fightClubScript.GetTeamByIndex(selection)
-            Actor monsterInstance = fightClubScript.PlayerRef.PlaceAtMe(monsterForm, numberOfMonsters) as Actor
-            fightClubScript.AddMonsterToTeam(monsterInstance, team)
+            i = 0
+            while i < numberOfMonsters
+                Actor monsterInstance = fightClubScript.PlayerRef.PlaceAtMe(monsterForm) as Actor
+                fightClubScript.AddMonsterToTeam(monsterInstance, team)
+                i += 1
+            endWhile
         else
             MainMenu(fightClubScript)
         endIf

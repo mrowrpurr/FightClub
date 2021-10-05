@@ -1,4 +1,5 @@
 scriptName FightClub extends Quest
+monster.SetFactionRank(thisFaction, 3)
 {Manages all of the monster data and everything for Fight Club}
 
 ; TODO - we should make a custom Nazeem
@@ -71,6 +72,22 @@ string[] property TeamNames
     endFunction
 endProperty
 
+int function GetMonstersForTeam(int team)
+    return JMap.getObj(team, "monsters")
+endFunction
+
+Form[] function GetMonsterInstancesForTeam(int team)
+    int theMonster = GetMonstersForTeam(team)
+    int monsterCount = JArray.count(theMonster)
+    Form[] monsterInstances = Utility.CreateFormArray(monsterCount)
+    int i = 0
+    while i < monsterCount
+        monsterInstances[i] = JArray.getForm(theMonster, i)
+        i += 1
+    endWhile
+    return monsterInstances
+endFunction
+
 string[] property MonsterNames
     string[] function get()
         int theMonsters = Monsters
@@ -85,7 +102,7 @@ string[] property MonsterNames
     endFunction
 endProperty
 
-int property monsters
+int property Monsters
     int function get()
         return JMap.getObj(Data, "monsters")
     endFunction
@@ -131,11 +148,11 @@ endEvent
 function BeginArrangingFightClubMatch()
     IsArrangingFightClubMatch = true
     ConsoleUtil.ExecuteCommand("tgm")
+    ConsoleUtil.ExecuteCommand("tdetect")
     ConsoleUtil.ExecuteCommand("tcl")
     ConsoleUtil.ExecuteCommand("tcai")
     ConsoleUtil.ExecuteCommand("sucsm 5")
     PlayerRef.SetActorValue("speedmult", 350.0)
-    Debug.MessageBox("Arranging Fight Match!")
 endFunction
 
 int function GetTeamByIndex(int index)
@@ -165,18 +182,76 @@ function RenameTeam(int team, string newName)
 endFunction
 
 function AddMonsterToTeam(Actor monster, int team)
-    
+    int teamMonsters = GetMonstersForTeam(team)
+    JArray.addForm(teamMonsters, monster)
+    Faction teamFaction = GetFactionForTeam(team)
+    Faction[] factions = AllFactions()
+    int i = 0
+    while i < factions.Length
+        Faction thisFaction = factions[i]
+        if thisFaction == teamFaction
+            monster.AddToFaction(thisFaction)
+            monster.SetFactionRank(thisFaction, 3)
+        else
+            monster.RemoveFromFaction(thisFaction)
+        endIF
+        i += 1
+    endWhile
 endFunction
 
 Faction[] function AllFactions()
-    
+    Faction[] factions = new Faction[8]
+    factions[0] = FightClub_Team1
+    factions[1] = FightClub_Team2
+    factions[2] = FightClub_Team3
+    factions[3] = FightClub_Team4
+    factions[4] = FightClub_Team5
+    factions[5] = FightClub_Team6
+    factions[6] = FightClub_Team7
+    factions[7] = FightClub_Team8
+    return factions
 endFunction
 
 Faction function GetFactionForTeam(int team)
-
+    int teamIndex = JArray.findObj(Teams, team)
+    Faction[] factions = AllFactions()
+    return factions[teamIndex]
 endFunction
 
 ; This saves the configuration to disk!
 function Save()
     JValue.writeToFile(Data, FIGHT_CLUB_CONFIG_FILE)
+endFunction
+
+
+function BeginFight()
+    MakeEveryoneOnEachTeamFriendsWithOneAnother()
+    ConsoleUtil.ExecuteCommand("tcl")
+    ConsoleUtil.ExecuteCommand("tcai")
+    ConsoleUtil.ExecuteCommand("tdetect")
+endFunction
+
+function MakeEveryoneOnEachTeamFriendsWithOneAnother()
+    int theTeams = Teams
+    int teamCount = JArray.count(theTeams)
+    int teamIndex = 0
+    while teamIndex < teamCount
+        int team = JArray.getObj(theTeams, teamIndex)
+        Form[] teamMonsters = GetMonsterInstancesForTeam(team)
+        int monsterOuterIndex = 0
+        while monsterOuterIndex < teamMonsters.Length
+            int monsterInnerIndex = 0
+            while monsterInnerIndex < teamMonsters.Length
+                Actor monsterA = teamMonsters[monsterOuterIndex] as Actor
+                Actor monsterB = teamMonsters[monsterInnerIndex] as Actor
+                if monsterA != monsterB
+                    monsterA.SetRelationshipRank(monsterB, 4)
+                    monsterB.SetRelationshipRank(monsterA, 4)
+                endIf
+                monsterInnerIndex += 1
+            endWhile
+            monsterOuterIndex += 1
+        endWhile
+        teamIndex += 1
+    endWhile
 endFunction
