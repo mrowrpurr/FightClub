@@ -131,14 +131,15 @@ endFunction
 function AddMonster(FightClub fightClubScript) global
     string esp = ChooseESP()
     if esp
+        Utility.WaitMenuMode(1.5)
         UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
-        textEntry.SetPropertyString("text", "Enter Form ID (without mod order prefix)")
+        textEntry.SetPropertyString("text", "")
         textEntry.OpenMenu()
         string formId = textEntry.GetResultString()
         if formId
             Form monsterForm = Game.GetFormFromFile(FormHelper.HexToDecimal(formId), esp)
             if monsterForm
-                Actor monster = monsterForm as Actor
+                ActorBase monster = monsterForm as ActorBase
                 if monster
                     fightClubScript.AddMonster(monster)
                     ManageMonsters(fightClubScript)

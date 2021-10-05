@@ -100,6 +100,7 @@ Faction property FightClub_Team8 auto
 
 ; Install the mod for the first time
 event OnInit()
+    ; Debug.MessageBox(PlayerRef.GetParentCell() + " " + PlayerRef.GetParentCell().GetName() + " " + PlayerRef.GetParentCell().GetFormID())
     Form hodForm = Game.GetForm(0x1347D)
     Form guarForm = Game.GetFormFromFile(0x5904, "mihailguar.esp")
     PlayerRef.EquipSpell(FightClub_MenuSpell, 0)
@@ -116,7 +117,7 @@ function BeginArrangingFightClubMatch()
     ConsoleUtil.ExecuteCommand("tcai")
     ConsoleUtil.ExecuteCommand("sucsm 5")
     PlayerRef.SetActorValue("speedmult", 350.0)
-    Debug.Notification("Arranging Fight Match...")
+    Debug.MessageBox("Arranging Fight Match!")
 endFunction
 
 int function GetTeamByIndex(int index)
@@ -127,13 +128,13 @@ int function GetMonsterByIndex(int index)
     return JArray.getObj(Monsters, index)
 endFunction
 
-int function AddMonster(Actor monster)
+int function AddMonster(ActorBase monster)
     int monsterMap = JMap.object()
     JArray.addObj(Monsters, monsterMap)
     JMap.setForm(monsterMap, "form", monster)
     string name = monster.GetName()
     if ! name
-        name = monster.GetActorBase().GetName()
+        name = monster.GetName()
     endIf
     JMap.setStr(monsterMap, "name", name)
 endFunction
