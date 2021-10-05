@@ -1,5 +1,4 @@
 scriptName FightClub extends Quest
-monster.SetFactionRank(thisFaction, 3)
 {Manages all of the monster data and everything for Fight Club}
 
 ; TODO - we should make a custom Nazeem
@@ -138,6 +137,10 @@ Faction property FightClub_Team6 auto
 Faction property FightClub_Team7 auto
 Faction property FightClub_Team8 auto
 
+; Faction Spell Abilities
+Spell property FightClub_Team1_Ability auto
+Spell property FightClub_Team2_Ability auto
+
 ; Install the mod for the first time
 event OnInit()
     PlayerRef.EquipSpell(FightClub_MenuSpell, 0)
@@ -185,6 +188,12 @@ function AddMonsterToTeam(Actor monster, int team)
     int teamMonsters = GetMonstersForTeam(team)
     JArray.addForm(teamMonsters, monster)
     Faction teamFaction = GetFactionForTeam(team)
+    Spell teamAbility = GetFactionAbilityForTeam(team)
+
+    ; Add Team Ability
+    monster.AddSpell(teamAbility)
+
+    ; Add To Factions
     Faction[] factions = AllFactions()
     int i = 0
     while i < factions.Length
@@ -218,40 +227,68 @@ Faction function GetFactionForTeam(int team)
     return factions[teamIndex]
 endFunction
 
+Spell[] function AllFactionAbilities()
+    Spell[] abilities = new Spell[8]
+    abilities[0] = FightClub_Team1_Ability
+    abilities[1] = FightClub_Team2_Ability
+    ; abilities[2] = FightClub_Team3
+    ; abilities[3] = FightClub_Team4
+    ; abilities[4] = FightClub_Team5
+    ; abilities[5] = FightClub_Team6
+    ; abilities[6] = FightClub_Team7
+    ; abilities[7] = FightClub_Team8
+    return abilities
+endFunction
+
+Spell function GetFactionAbilityForTeam(int team)
+    int teamIndex = JArray.findObj(Teams, team)
+    Spell[] abilities = AllFactionAbilities()
+    return abilities[teamIndex]
+endFunction
+
 ; This saves the configuration to disk!
 function Save()
     JValue.writeToFile(Data, FIGHT_CLUB_CONFIG_FILE)
 endFunction
 
-
 function BeginFight()
-    MakeEveryoneOnEachTeamFriendsWithOneAnother()
+    ; MakeEveryoneOnEachTeamFriendsWithOneAnother()
     ConsoleUtil.ExecuteCommand("tcl")
     ConsoleUtil.ExecuteCommand("tcai")
     ConsoleUtil.ExecuteCommand("tdetect")
 endFunction
 
-function MakeEveryoneOnEachTeamFriendsWithOneAnother()
-    int theTeams = Teams
-    int teamCount = JArray.count(theTeams)
-    int teamIndex = 0
-    while teamIndex < teamCount
-        int team = JArray.getObj(theTeams, teamIndex)
-        Form[] teamMonsters = GetMonsterInstancesForTeam(team)
-        int monsterOuterIndex = 0
-        while monsterOuterIndex < teamMonsters.Length
-            int monsterInnerIndex = 0
-            while monsterInnerIndex < teamMonsters.Length
-                Actor monsterA = teamMonsters[monsterOuterIndex] as Actor
-                Actor monsterB = teamMonsters[monsterInnerIndex] as Actor
-                if monsterA != monsterB
-                    monsterA.SetRelationshipRank(monsterB, 4)
-                    monsterB.SetRelationshipRank(monsterA, 4)
-                endIf
-                monsterInnerIndex += 1
-            endWhile
-            monsterOuterIndex += 1
-        endWhile
-        teamIndex += 1
-    endWhile
-endFunction
+; function MakeEveryoneOnEachTeamFriendsWithOneAnother()
+;     int theTeams = Teams
+;     int teamCount = JArray.count(theTeams)
+;     int teamOuterIndex = 0
+;     while teamOuterIndex < teamCount
+;         int team = JArray.getObj(theTeams, teamOuterIndex)
+;         Form[] teamMonsters = GetMonsterInstancesForTeam(team)
+;         int monsterOuterIndex = 0
+;         while monsterOuterIndex < teamMonsters.Length
+;             Actor monsterA = teamMonsters[monsterOuterIndex] as Actor
+
+;             ; Make all monsters hate monsters on every other team
+;             int teamInnerIndex = 0
+;             while teamOuterIndex < teamCount
+        
+
+;             endWhile
+
+;             ; Make all monsters on the same team friends with one anotehr
+;             int monsterInnerIndex = 0
+;             while monsterInnerIndex < teamMonsters.Length
+;                 Actor monsterB = teamMonsters[monsterInnerIndex] as Actor
+;                 if monsterA != monsterB
+;                     monsterA.SetRelationshipRank(monsterB, 4)
+;                     monsterB.SetRelationshipRank(monsterA, 4)
+;                 endIf
+;                 monsterInnerIndex += 1
+;             endWhile
+
+;             monsterOuterIndex += 1
+;         endWhile
+;         teamOuterIndex += 1
+;     endWhile
+; endFunction
