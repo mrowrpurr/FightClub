@@ -182,6 +182,9 @@ function RenameTeam(int team, string newName)
 endFunction
 
 function AddMonsterToTeam(Actor monster, int team)
+    ; Remove monster from all existing Factions
+    monster.RemoveFromAllFactions()
+
     int teamMonsters = GetMonstersForTeam(team)
     JArray.addForm(teamMonsters, monster)
     Faction teamFaction = GetFactionForTeam(team)
