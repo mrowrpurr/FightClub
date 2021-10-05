@@ -13,7 +13,7 @@ endFunction
 
 function FightClub_MainMenu(FightClub fightClubScript) global
     int beginArranging = 0
-    SetMessageBoxText(fightClubScript, "~ Welcome to Fight Club ~")
+    SetMessageBoxText(fightClubScript, "")
     int result = fightClubScript.FightClub_MainMenu.Show()
     if result == beginArranging
         fightClubScript.BeginArrangingFightClubMatch()
@@ -34,14 +34,18 @@ function FightClub_MainMenu_NoMonster(FightClub fightClubScript) global
     int fight = 0
     int spawnMonster = 1
     int manageMonsters = 2
-    int manageTeams = 3
-    int quitFightClub = 4
+    int renameTeam = 3
+    int quit = 4
     int result = fightClubScript.FightClub_MainMenu_NoMonster.Show()
     if result == fight
     elseIf result == spawnMonster
+        SpawnMonster(fightClubScript)
     elseIf result == manageMonsters
-    elseIf result == manageTeams
-    elseIf result == quitFightClub
+        ManageMonsters(fightClubScript)
+    elseIf result == renameTeam
+        RenameTeam(fightClubScript)
+    elseIf result == quit
+        QuitFightClub(fightClubScript)
     endIf
 endFunction
 
@@ -52,19 +56,62 @@ function FightClub_MainMenu_WithMonster(FightClub fightClubScript, Actor monster
     int fight = 2
     int spawnMonster = 3
     int manageMonsters = 4
-    int manageTeams = 5
-    int quitFightClub = 6
+    int renameTeam = 5
+    int quit = 6
     int result = fightClubScript.FightClub_MainMenu_WithMonster.Show()
     if result == editMonster
     elseIf result == duplicateMonster
     elseIf result == fight
     elseIf result == spawnMonster
+        SpawnMonster(fightClubScript)
     elseIf result == manageMonsters
-    elseIf result == manageTeams
-    elseIf result == quitFightClub
+        ManageMonsters(fightClubScript)
+    elseIf result == renameTeam
+        RenameTeam(fightClubScript)
+    elseIf result == quit
+        QuitFightClub(fightClubScript)
     endIf
 endFunction
 
+function RenameTeam(FightClub fightClubScript) global
+    UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
+    string[] teamNames = fightClubScript.TeamNames
+    int i = 0
+    while i < teamNames.Length
+        listMenu.AddEntryItem(teamNames[i])
+        i += 1
+    endWhile
+    listMenu.OpenMenu()
+    int result = listMenu.GetResultInt()
+    if result > -1
+        UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
+        textEntry.OpenMenu()
+        string newName = textEntry.GetResultString()
+        if newName
+            int team = fightClubScript.GetTeamByIndex(result)
+            string oldName = JMap.getStr(team, "name")
+            JMap.setStr(team, "name", newName)
+            Debug.MessageBox("Renamed " + oldName + " to " + newName)
+            MainMenu(fightClubScript)
+        else
+            MainMenu(fightClubScript)
+        endIf
+    else
+        MainMenu(fightClubScript)
+    endIf
+endFunction
+
+function SpawnMonster(FightClub fightClubScript) global
+
+endFunction
+
+function ManageMonsters(FightClub fightClubScript) global
+
+endFunction
+
+function QuitFightClub(FightClub fightClubScript) global
+endFunction
+
 function SetMessageBoxText(FightClub fightClubScript, string text) global
-    fightClubScript.FightClub_MessageText_BaseForm.SetName(text)
+    fightClubScript.FightClub_MessageText_BaseForm.SetName("~ Welcome to Fight Club ~\n\n" + text)
 endFunction

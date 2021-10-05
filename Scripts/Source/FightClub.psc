@@ -1,16 +1,73 @@
 scriptName FightClub extends Quest
 {Manages all of the monster data and everything for Fight Club}
 
+; TODO - we should make a custom Nazeem
+;        who uses magic and shouts with about 1000 health
+
+; The number of teams available
+int NumberOfTeamsAvailable = 8
+
+int property Data
+    int function get()
+        int fightClubData = JDB.solveObj(".fightClub")
+        if ! fightClubData
+            fightClubData = JMap.object()
+            JDB.solveObjSetter(".fightClub", fightClubData, createMissingKeys = true)
+            JMap.setObj(fightClubData, "monsters", JArray.object())
+            int theTeams = JArray.object()
+            JMap.setObj(fightClubData, "teams", theTeams)
+            int i = 0
+            while i < NumberOfTeamsAvailable
+                int team = JMap.object()
+                JArray.addObj(theTeams, team)
+                JMap.setStr(team, "name", "Team " + (i + 1))
+                JMap.setObj(team, "monsters", JArray.object())
+                i += 1
+            endWhile
+        endIf
+        return fightClubData
+    endFunction
+endProperty
+
+int property Teams
+    int function get()
+        return JMap.getObj(Data, "teams")
+    endFunction
+endProperty
+
+string[] property TeamNames
+    string[] function get()
+        string[] names = new string[8]
+        int theTeams = Teams
+        int i = 0
+        while i < NumberOfTeamsAvailable
+            names[i] = JMap.getStr(JArray.getObj(theTeams, i), "name")
+            i += 1
+        endWhile
+        return names
+    endFunction
+endProperty
+
+int property monsters
+    int function get()
+        return JMap.getObj(Data, "monsters")
+    endFunction
+endProperty
+
+; The current state which Fight Club is in
 bool property IsArrangingFightClubMatch  auto
 bool property IsFightCurrentlyInProgress auto
+
+; Player
+Actor property PlayerRef auto
 
 ; Main Spell for Fight Club
 Spell property FightClub_MenuSpell auto
 
 ; Messages
-Message Property FightClub_MainMenu             auto
-Message property FightClub_MainMenu_NoMonster   auto
-Message property FightClub_MainMenu_WithMonster auto
+Message property FightClub_MainMenu                   auto
+Message property FightClub_MainMenu_NoMonster         auto
+Message Property FightClub_MainMenu_WithMonster       auto
 
 ; Used to set Message text
 ; See `FightClub_UI.SetMessageBoxText()`
@@ -26,21 +83,17 @@ Faction property FightClub_Team6 auto
 Faction property FightClub_Team7 auto
 Faction property FightClub_Team8 auto
 
-; ADD FACTIONS
-
+; Install the mod for the first time
 event OnInit()
-    ; Toggle Collision
-    ; Increase Player Speed
-
     Form hodForm = Game.GetForm(0x1347D)
     Form guarForm = Game.GetFormFromFile(0x5904, "mihailguar.esp")
-
     PlayerRef.EquipSpell(FightClub_MenuSpell, 0)
     PlayerRef.EquipSpell(FightClub_MenuSpell, 1)
     PlayerRef.PlaceAtMe(hodForm)
     PlayerRef.PlaceAtMe(guarForm)
 endEvent
 
+; Start arranging fight club match
 function BeginArrangingFightClubMatch()
     IsArrangingFightClubMatch = true
     ConsoleUtil.ExecuteCommand("tgm")
@@ -51,11 +104,10 @@ function BeginArrangingFightClubMatch()
     Debug.Notification("Arranging Fight Match...")
 endFunction
 
+int function GetTeamByIndex(int index)
+    return JArray.getObj(Teams, index)
+endFunction
 
-; int GUAR_ONE = 0x5904
-; int GUAR_TWO = 0x23fa4
-; int GUAR_THREE = 0x1ee12
-; int GUAR_FOUR = 0x1ee15
-; int GUAR_FIVE = 0x1ee1
-
-Actor Property PlayerRef  Auto  
+int function GetTeamByName(int index)
+    ; TODO
+endFunction
