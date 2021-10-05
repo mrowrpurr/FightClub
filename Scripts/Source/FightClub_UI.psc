@@ -102,11 +102,118 @@ function RenameTeam(FightClub fightClubScript) global
 endFunction
 
 function SpawnMonster(FightClub fightClubScript) global
+    UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
+    listMenu.AddEntryItem("[Search Monsters]")
+    string[] monsterNames = fightClubScript.MonsterNames
+    int i = 0
+    while i < monsterNames.Length
+        listMenu.AddEntryItem(monsterNames[i])
+        i += 1
+    endWhile
+    listMenu.OpenMenu()
+    int result = listMenu.GetResultInt()
+    if result > -1
+        UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
+        textEntry.SetPropertyString("text", "1")
+        textEntry.OpenMenu()
+        int numberOfMonsters = textEntry.GetResultString() as int
+        if ! numberOfMonsters
+            numberOfMonsters = 1
+        endIf
+        int monster = fightClubScript.GetMonsterByIndex(result - 1) ; -1 because of [Search...]
+        Form monsterForm = JMap.getForm(monster, "form")
+        fightClubScript.PlayerRef.PlaceAtMe(monsterForm, numberOfMonsters)
+    else
+        MainMenu(fightClubScript)
+    endIf
+endFunction
 
+function AddMonster(FightClub fightClubScript) global
+    string esp = ChooseESP()
+    if esp
+        UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
+        textEntry.SetPropertyString("text", "Enter Form ID (without mod order prefix)")
+        textEntry.OpenMenu()
+        string formId = textEntry.GetResultString()
+        if formId
+            Form monsterForm = Game.GetFormFromFile(FormHelper.HexToDecimal(formId), esp)
+            if monsterForm
+                Actor monster = monsterForm as Actor
+                if monster
+                    fightClubScript.AddMonster(monster)
+                    ManageMonsters(fightClubScript)
+                else
+                    Debug.MessageBox("Form " + formId + " " + monsterForm.GetName() + " in " + esp + " is not an Actor")
+                    MainMenu(fightClubScript)
+                endIf
+            else
+                Debug.MessageBox("Could not find Form in " + esp + " with Form ID " + formId + "\n\nReminder: do not include the mod order prefix, e.g. FE003 or 04")
+                MainMenu(fightClubScript)
+            endIf
+        else
+            MainMenu(fightClubScript)
+        endIf
+    else
+        MainMenu(fightClubScript)
+    endIf
+endFunction
+
+string function ChooseESP() global
+    UIListMenu listMenu = uiextensions.GetMenu("UIListMenu") as UIListMenu
+
+    int numberOfMods = Game.GetModCount()
+    int index = 0
+    while index < numberOfMods
+        string modName = Game.GetModName(index)
+        listMenu.AddEntryItem(modName)
+        index += 1
+    endWhile
+
+    int numberOfLightMods = Game.GetLightModCount()
+    index = 0
+    while index < numberOfLightMods
+        string modName = Game.GetLightModName(index)
+        listMenu.AddEntryItem(modName)
+        index += 1
+    endWhile
+
+    listMenu.OpenMenu()
+
+    int selectedIndex = listMenu.GetResultInt()
+    if selectedIndex > -1
+        if selectedIndex < numberOfMods
+            return Game.GetModName(selectedIndex)
+        else
+            return Game.GetLightModName(selectedIndex - numberOfMods)
+        endIf
+    else
+        return ""
+    endIf
+endFunction
+
+function RenameMonster(FightClub fightClubScript) global
+endFunction
+
+function RemoveMonster(FightClub fightClubScript) global
 endFunction
 
 function ManageMonsters(FightClub fightClubScript) global
-
+    int spawn = 0
+    int add = 1
+    int rename = 2
+    int remove = 3
+    int result = fightClubScript.FightClub_MainMenu_ManageMonsters.Show()
+    if result == spawn
+        SpawnMonster(fightClubScript)
+    elseIf result == add
+        AddMonster(fightClubScript)
+    elseIf result == rename
+        RenameMonster(fightClubScript)
+    elseIf result == remove
+        RemoveMonster(fightClubScript)
+    else
+        MainMenu(fightClubScript)
+    endIf
 endFunction
 
 function QuitFightClub(FightClub fightClubScript) global

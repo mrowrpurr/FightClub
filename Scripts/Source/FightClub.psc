@@ -48,6 +48,20 @@ string[] property TeamNames
     endFunction
 endProperty
 
+string[] property MonsterNames
+    string[] function get()
+        int theMonsters = Monsters
+        int monsterCount = JArray.count(theMonsters)
+        string[] names = Utility.CreateStringArray(monsterCount)
+        int i = 0
+        while i < monsterCount
+            names[i] = JMap.getStr(JArray.getObj(theMonsters, i), "name")
+            i += 1
+        endWhile
+        return names
+    endFunction
+endProperty
+
 int property monsters
     int function get()
         return JMap.getObj(Data, "monsters")
@@ -65,9 +79,10 @@ Actor property PlayerRef auto
 Spell property FightClub_MenuSpell auto
 
 ; Messages
-Message property FightClub_MainMenu                   auto
-Message property FightClub_MainMenu_NoMonster         auto
-Message Property FightClub_MainMenu_WithMonster       auto
+Message property FightClub_MainMenu                auto
+Message property FightClub_MainMenu_NoMonster      auto
+Message property FightClub_MainMenu_WithMonster    auto
+Message property FightClub_MainMenu_ManageMonsters auto
 
 ; Used to set Message text
 ; See `FightClub_UI.SetMessageBoxText()`
@@ -108,6 +123,17 @@ int function GetTeamByIndex(int index)
     return JArray.getObj(Teams, index)
 endFunction
 
-int function GetTeamByName(int index)
-    ; TODO
+int function GetMonsterByIndex(int index)
+    return JArray.getObj(Monsters, index)
+endFunction
+
+int function AddMonster(Actor monster)
+    int monsterMap = JMap.object()
+    JArray.addObj(Monsters, monsterMap)
+    JMap.setForm(monsterMap, "form", monster)
+    string name = monster.GetName()
+    if ! name
+        name = monster.GetActorBase().GetName()
+    endIf
+    JMap.setStr(monsterMap, "name", name)
 endFunction
