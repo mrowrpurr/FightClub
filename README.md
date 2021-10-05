@@ -1,2 +1,3 @@
-# ArenaBuilder
- Build fight matches between Skyrim monsters
+# Fight Club
+
+> Build fight matches between Skyrim monsters
