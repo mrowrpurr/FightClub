@@ -185,6 +185,15 @@ function AddMonsterToTeam(Actor monster, int team)
     ; Remove monster from all existing Factions
     monster.RemoveFromAllFactions()
 
+    ; Make them Aggressive. Attack Enemies on sight. Do not attack Neutrals or everyone.
+    monster.SetActorValue("Aggression", 2)
+
+    ; Make them Foolhardy; Will never avoid/flee from anyone. 
+    monster.SetActorValue("Confidence", 4)
+
+    ; Make them Help Allies. Will not Help Friends who are not Allies.
+    monster.SetActorValue("Assistance", 1)
+
     int teamMonsters = GetMonstersForTeam(team)
     JArray.addForm(teamMonsters, monster)
     Faction teamFaction = GetFactionForTeam(team)
