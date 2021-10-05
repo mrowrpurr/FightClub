@@ -10,15 +10,38 @@ int NumberOfTeamsAvailable = 8
 bool _loadedFromConfigFile = false
 string property FIGHT_CLUB_CONFIG_FILE = "Data/FightClub/Config.json" autoReadonly
 
-; 1. Make Monsters Allies! <---- TODO / Wrking on thi
+; Keep Track of How Many Times the Given Team has won!
 
-; 2. DECLARE A WINNER!
+; Also be able to reset the whole team's health and resurrect them
+
+; ; STOP or PAUSE
 ; 3. Cleanup.
+; RESET and do another match
 ; 4. Player Load Games
-
 ; 5. Nexus!
-
 ; 6. Player Bet using Gold
+
+; TODO - Separate Team and Monster configs into separate files
+
+int property BattleData
+    int function get()
+        int battleDataId = JDB.solveObj(".fightClub.battleDataId")
+        if ! battleDataId
+            battleDataId = JMap.object()
+            JDB.solveObjSetter(".fightClub.battleDataId", battleDataId, createMissingKeys = true)
+            JMap.setObj(battleDataId, "monstersToTeams", JFormMap.object())
+            int aliveMonsterTeams = JIntMap.object()
+            JMap.setObj(battleDataId, "aliveMonstersPerTeam", aliveMonsterTeams)
+            int[] theTeamIds = TeamIds
+            int i = 0
+            while i < theTeamIds.Length
+                JIntMap.setObj(aliveMonsterTeams, theTeamIds[i], JArray.object())
+                i += 1
+            endWhile
+        endIf
+        return battleDataId
+    endFunction
+endProperty
 
 int property Data
     int function get()
@@ -28,15 +51,15 @@ int property Data
             ; Load from disk, if available
             int fightClubData = JValue.readFromFile(FIGHT_CLUB_CONFIG_FILE)
             if fightClubData
-                JDB.solveObjSetter(".fightClub", fightClubData, createMissingKeys = true)
+                JDB.solveObjSetter(".fightClub.config", fightClubData, createMissingKeys = true)
                 return fightClubData
             endIf
         endIf
 
-        int fightClubData = JDB.solveObj(".fightClub")
+        int fightClubData = JDB.solveObj(".fightClub.config")
         if ! fightClubData
             fightClubData = JMap.object()
-            JDB.solveObjSetter(".fightClub", fightClubData, createMissingKeys = true)
+            JDB.solveObjSetter(".fightClub.config", fightClubData, createMissingKeys = true)
             JMap.setObj(fightClubData, "monsters", JArray.object())
             int theTeams = JArray.object()
             JMap.setObj(fightClubData, "teams", theTeams)
@@ -53,9 +76,35 @@ int property Data
     endFunction
 endProperty
 
+int property MonstersToTeams
+    int function get()
+        return JMap.getObj(BattleData, "monstersToTeams")
+    endFunction
+endProperty
+
+int property AliveMonstersPerTeam
+    int function get()
+        return JMap.getObj(BattleData, "aliveMonstersPerTeam")
+    endFunction
+endProperty
+
 int property Teams
     int function get()
         return JMap.getObj(Data, "teams")
+    endFunction
+endProperty
+
+int[] property TeamIds
+    int[] function get()
+        int theTeams = Teams
+        int teamCount = JArray.count(theTeams)
+        int[] theTeamIds = Utility.CreateIntArray(teamCount)
+        int i = 0
+        while i < teamCount
+            theTeamIds[i] = JArray.getObj(theTeams, i)
+            i += 1
+        endWhile
+        return theTeamIds
     endFunction
 endProperty
 
@@ -86,6 +135,10 @@ Form[] function GetMonsterInstancesForTeam(int team)
         i += 1
     endWhile
     return monsterInstances
+endFunction
+
+int function GetAliveMonstersForTeam(int team)
+    return JIntMap.getObj(AliveMonstersPerTeam, team)
 endFunction
 
 string[] property MonsterNames
@@ -137,6 +190,9 @@ Faction property FightClub_Team5 auto
 Faction property FightClub_Team6 auto
 Faction property FightClub_Team7 auto
 Faction property FightClub_Team8 auto
+
+; The spell/ability which is added to all contestants
+Spell property FightClub_ContestantSpell auto
 
 ; Install the mod for the first time
 event OnInit()
@@ -194,6 +250,14 @@ function AddMonsterToTeam(Actor monster, int team)
     ; Make them Help Allies. Will not Help Friends who are not Allies.
     monster.SetActorValue("Assistance", 1)
 
+    ; Add our custom ability for contestants
+    monster.AddSpell(FightClub_ContestantSpell)
+
+    ; Track this SPECIFIC monster and which team they're on
+    JFormMap.setObj(MonstersToTeams, monster, team)
+
+    JArray.addForm(GetAliveMonstersForTeam(team), monster)
+
     int teamMonsters = GetMonstersForTeam(team)
     JArray.addForm(teamMonsters, monster)
     Faction teamFaction = GetFactionForTeam(team)
@@ -209,6 +273,12 @@ function AddMonsterToTeam(Actor monster, int team)
         endIF
         i += 1
     endWhile
+
+    JValue.writeToFile(BattleData, "BattleData.json")
+endFunction
+
+int function GetTeamForMonster(Actor monster)
+    return JFormMap.getObj(MonstersToTeams, monster)
 endFunction
 
 Faction[] function AllFactions()
@@ -234,7 +304,6 @@ endFunction
 function Save()
     JValue.writeToFile(Data, FIGHT_CLUB_CONFIG_FILE)
 endFunction
-
 
 function BeginFight()
     MakeEveryoneOnEachTeamFriendsWithOneAnother()
@@ -266,4 +335,59 @@ function MakeEveryoneOnEachTeamFriendsWithOneAnother()
         endWhile
         teamIndex += 1
     endWhile
+endFunction
+
+string function GetTeamName(int team)
+    return JMap.getStr(team, "name")
+endFunction
+
+string function GetMonsterName(Actor monster)
+    string name = monster.GetName()
+    if name
+        return name
+    else
+        return monster.GetActorBase().GetName()
+    endIf
+endFunction
+
+function TrackDeath(Actor target, Actor killer)
+    int targetTeam = GetTeamForMonster(target)
+    int aliveMonstersOnTeam = GetAliveMonstersForTeam(targetTeam)
+    JArray.eraseForm(aliveMonstersOnTeam, target)
+    int winningTeam = GetWinningTeam()
+    if winningTeam
+       MatchIsWon(winningTeam) 
+    endIf
+endFunction
+
+function MatchIsWon(int winningTeam)
+    PauseCombat()
+    Debug.MessageBox(GetTeamName(winningTeam) + " is victorious!")
+endFunction
+
+function PauseCombat()
+    ConsoleUtil.ExecuteCommand("tcai")
+endFunction
+
+function TrackHit(Actor target, Actor attacker, Form weaponOrSpell)
+    ; TODO
+endFunction
+
+int function GetWinningTeam()
+    int remainingTeams = JArray.object()
+    int[] theTeamIds = TeamIds
+    int i = 0
+    while i < theTeamIds.Length
+        int remainingTeamMembers = GetAliveMonstersForTeam(theTeamIds[i])
+        if JArray.count(remainingTeamMembers) > 0
+            JArray.addObj(remainingTeams, theTeamIds[i])
+        endIf
+        i += 1
+    endWhile
+    int remainingTeamCount = JArray.count(remainingTeams)
+    if remainingTeamCount == 1
+        return JArray.getObj(remainingTeams, 0)
+    else
+        return 0
+    endIf
 endFunction

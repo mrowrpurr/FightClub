@@ -17,6 +17,7 @@ function FightClub_MainMenu(FightClub fightClubScript) global
     int result = fightClubScript.FightClub_MainMenu.Show()
     if result == beginArranging
         fightClubScript.BeginArrangingFightClubMatch()
+        MainMenu(fightClubScript)
     endIf
 endFunction
 
