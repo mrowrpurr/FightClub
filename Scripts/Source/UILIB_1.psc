@@ -1,4 +1,4 @@
-ScriptName UILIB_1 Extends Form
+scriptName UILIB_1 Extends Form
 {SkyUILib API - Version 1}
 
 ;Private variables
