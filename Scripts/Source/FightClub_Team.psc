@@ -23,12 +23,17 @@ endFunction
 int function Create(string name) global
     int team = JMap.object()
     SetName(team, name)
+    AddTeam(team)
     return team
 endFunction
 
 int function CreateAndSave(string name) global
     Create(name)
     SaveAll()
+endFunction
+
+function AddTeam(int team) global
+    JMap.setObj(TeamsData(), GetName(team), team)
 endFunction
 
 function SetName(int team, string name) global

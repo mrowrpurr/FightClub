@@ -31,6 +31,12 @@ string[] function AllMonsterNames() global
     return JMap.allKeysPArray(LibraryData())
 endFunction
 
-int function GetMonsterByName(string name) global
-    return JMap.getObj(LibraryData(), name)
+function RenameMonster(string oldName, string newName) global
+    ActorBase monster = GetMonsterBaseByName(oldName)
+    JMap.removeKey(LibraryData(), oldName)
+    JMap.setForm(LibraryData(), newName, monster)
+endFunction
+
+ActorBase function GetMonsterBaseByName(string name) global
+    return JMap.getForm(LibraryData(), name) as ActorBase
 endFunction

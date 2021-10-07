@@ -6,10 +6,11 @@ endFunction
 
 function Show() global
     int addTeam = 0
-    int viewTeam = 1
-    int removeTeam = 2
-    int renameTeam = 3
-    int back = 4
+    int selectTeam = 1
+    int viewTeam = 2
+    int removeTeam = 3
+    int renameTeam = 4
+    int back = 5
     int result = GetMessageBox().Show()
     if result == addTeam
         string teamName = FightClub_Menu_TextEntry.GetUserText()
