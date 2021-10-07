@@ -188,14 +188,51 @@ function AddMonster(FightClub fightClubScript) global
     endIf
 endFunction
 
-string function ChooseESP() global
+string function ChooseESP(string espQuery = "") global
     UIListMenu listMenu = uiextensions.GetMenu("UIListMenu") as UIListMenu
+
+    string[] allEsps = GetAllEspNames(espQuery)
+
+    if ! espQuery
+        listMenu.AddEntryItem("[Search for ESP/ESM]")
+    endIf
+
+    int i = 0
+    while i < allEsps.Length
+        listMenu.AddEntryItem(allEsps[i])
+        i += 1
+    endWhile
+    
+    listMenu.OpenMenu()
+    int selectedIndex = listMenu.GetResultInt()
+
+    if selectedIndex > -1
+        if espQuery
+            return allEsps[selectedIndex]
+        else
+            if selectedIndex == 0
+                UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
+                textEntry.OpenMenu()
+                return ChooseESP(textEntry.GetResultString())
+            else
+                return allEsps[selectedIndex - 1]
+            endIf
+        endIf
+    else
+        return ""
+    endIf
+endFunction
+
+string[] function GetAllEspNames(string nameQuery = "") global
+    int espNames = JArray.object()
 
     int numberOfMods = Game.GetModCount()
     int index = 0
     while index < numberOfMods
         string modName = Game.GetModName(index)
-        listMenu.AddEntryItem(modName)
+        if (nameQuery && StringUtil.Find(modName, nameQuery) > -1) || ! nameQuery
+            JArray.addStr(espNames, modName)
+        endIf
         index += 1
     endWhile
 
@@ -203,22 +240,13 @@ string function ChooseESP() global
     index = 0
     while index < numberOfLightMods
         string modName = Game.GetLightModName(index)
-        listMenu.AddEntryItem(modName)
+        if (nameQuery && StringUtil.Find(modName, nameQuery) > -1) || ! nameQuery
+            JArray.addStr(espNames, modName)
+        endIf
         index += 1
     endWhile
 
-    listMenu.OpenMenu()
-
-    int selectedIndex = listMenu.GetResultInt()
-    if selectedIndex > -1
-        if selectedIndex < numberOfMods
-            return Game.GetModName(selectedIndex)
-        else
-            return Game.GetLightModName(selectedIndex - numberOfMods)
-        endIf
-    else
-        return ""
-    endIf
+    return JArray.asStringArray(espNames)
 endFunction
 
 function RenameMonster(FightClub fightClubScript) global
