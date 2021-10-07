@@ -1,8 +1,8 @@
 scriptName FightClub_Data
 
-string function FightClubDataFile(string filename) global
+string function FightClubDataFile(string filename = "") global
     if filename
-        return "Data/FightClub/Data/" + filename
+        return "Data/FightClub/Data/" + filename + ".json"
     else
         return "Data/FightClub/Data"
     endIf
@@ -42,4 +42,18 @@ endFunction
 
 int function SaveContext(int context, string contextName) global
     JValue.writeToFile(context, FightClubDataFile(contextName))
+endFunction
+
+function LoadAll() global
+    int folderData = JValue.readFromDirectory(FightClubDataFile())
+    string[] fileNames = JMap.allKeysPArray(folderData)
+    int i = 0
+    while i < fileNames.Length
+        string fileName = filenames[i] 
+        int jsonIndex = StringUtil.Find(fileName, ".json")
+        string contextName = StringUtil.Substring(fileName, 0, jsonIndex)
+        int context = JMap.getObj(folderData, fileName)
+        SetContext(context, contextName)
+        i += 1
+    endWhile
 endFunction

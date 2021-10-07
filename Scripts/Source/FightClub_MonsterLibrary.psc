@@ -1,14 +1,20 @@
 scriptName FightClub_MonsterLibrary
 
+string function ContextName() global
+    return "monsters"
+endFunction
+
 int function LibraryData() global
-    return FightClub_Data.GetContext("monsters")
+    return FightClub_Data.GetContext(ContextName())
+endFunction
+
+function Save() global
+    FightClub_Data.SaveContext(LibraryData(), ContextName())
 endFunction
 
 ActorBase function AddFromMod(ActorBase monsterBase, string name) global
     int monster = FightClub_Monster.Create(name, monsterBase)
     AddMonster(monster)
-    JValue.writeToFile(LibraryData(), "FightClub_Monsters.json")
-    JValue.writeToFile(JDB.solveObj(".fightClub"), "FightClub_All.json")
 endFunction
 
 function AddMonster(int monster) global

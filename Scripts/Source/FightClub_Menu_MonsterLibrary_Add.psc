@@ -11,6 +11,7 @@ function Show() global
                 string monsterName = FightClub_Menu_TextEntry.GetUserText(monsterBase.GetName())
                 if monsterName
                     FightClub_MonsterLibrary.AddFromMod(monsterBase, monsterName)
+                    FightClub_MonsterLibrary.Save()
                     Debug.MessageBox("Added " + monsterName)
                     FightClub_Menu_MonsterLibrary.Show()
                 else
