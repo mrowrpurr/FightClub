@@ -11,7 +11,7 @@ function Show() global
     int mainMenu = 3
     int result = GetMessageBox().Show()
     if result == add
-        
+        FightClub_Menu_MonsterLibrary_Add.Show()
     elseIf result == remove
 
     elseIf result == rename
