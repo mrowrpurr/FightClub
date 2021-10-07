@@ -15,7 +15,7 @@ function Show() global
     elseIf result == remove
 
     elseIf result == rename
-
+        FightClub_Menu_MonsterLibrary_Rename.Show()
     elseIf result == mainMenu
         FightClub_Menu_MainMenu.Show()
     else

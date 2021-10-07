@@ -19,5 +19,5 @@ string function ChooseMod() global
         index += 1
     endWhile
 
-    FightClub_Menu_ItemList.Choose(JArray.asStringArray(modNames))
+    return FightClub_Menu_ItemList.Choose(JArray.asStringArray(modNames))
 endFunction

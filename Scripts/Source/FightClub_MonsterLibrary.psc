@@ -7,23 +7,24 @@ endFunction
 ActorBase function AddFromMod(ActorBase monsterBase, string name) global
     int monster = FightClub_Monster.Create(name, monsterBase)
     AddMonster(monster)
+    JValue.writeToFile(LibraryData(), "FightClub_Monsters.json")
+    JValue.writeToFile(JDB.solveObj(".fightClub"), "FightClub_All.json")
 endFunction
 
 function AddMonster(int monster) global
-    JArray.addObj(LibraryData(), monster)
+    JMap.setForm(LibraryData(), \
+        FightClub_Monster.GetName(monster), \
+        FightClub_Monster.GetActorBase(monster))
 endFunction
 
 int function GetMonsterCount() global
-    return JArray.count(LibraryData())
+    return JMap.count(LibraryData())
 endFunction
 
 string[] function AllMonsterNames() global
-    int monsterNames = JArray.object()
-    int monsterCount = GetMonsterCount()
-    int i = 0
-    while i < monsterCount
-        JArray.addObj(monsterNames, JArray.getObj(LibraryData(), i))
-        i += 1
-    endWhile
-    return JArray.asStringArray(monsterNames)
+    return JMap.allKeysPArray(LibraryData())
+endFunction
+
+int function GetMonsterByName(string name) global
+    return JMap.getObj(LibraryData(), name)
 endFunction

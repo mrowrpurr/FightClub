@@ -8,17 +8,21 @@ string function FightClubDataFile(string filename) global
     endIf
 endFunction
 
-int function InitializeContext(string contextName) global
+int function InitializeContext(string contextName, bool list = false) global
     int context = JDB.solveObj(".fightClub." + contextName)
     if ! context
-        context = JMap.object()
+        if list
+            context = JArray.object()
+        else
+            context = JMap.object()
+        endIf
         JDB.solveObjSetter(".fightClub." + contextName, context, createMissingKeys = true)
     endIf
     return context
 endFunction
 
-int function GetContext(string contextName) global
-    return InitializeContext(contextName)
+int function GetContext(string contextName, bool list = false) global
+    return InitializeContext(contextName, list)
 endFunction
 
 function SetContext(int context, string contextName) global

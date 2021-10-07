@@ -2,8 +2,7 @@ scriptName FightClub_Menu_ItemList
 
 string function Choose(string[] items, string query = "", bool search = true) global
     UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
-
-    Debug.MessageBox("Choose [items] Query: '" + query + "'")
+    int queryMatchItems = JArray.object()
 
     bool showSearchItem = search && ! query
 
@@ -13,10 +12,20 @@ string function Choose(string[] items, string query = "", bool search = true) gl
 
     int i = 0
     while i < items.Length
-        listMenu.AddEntryItem(items[i])
+        string item = items[i]
+        if (! query) || (query && StringUtil.Find(item, query) > -1)
+            listMenu.AddEntryItem(items[i])
+            if query
+                JArray.addStr(queryMatchItems, item)
+            endIf
+        endIf
         i += 1
     endWhile
-    
+
+    if query
+        items = JArray.asStringArray(queryMatchItems)
+    endIf
+
     listMenu.OpenMenu()
 
     int selectedIndex = listMenu.GetResultInt()

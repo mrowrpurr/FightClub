@@ -12,6 +12,7 @@ function Show() global
                 if monsterName
                     FightClub_MonsterLibrary.AddFromMod(monsterBase, monsterName)
                     Debug.MessageBox("Added " + monsterName)
+                    FightClub_Menu_MonsterLibrary.Show()
                 else
                     FightClub_Menu_MonsterLibrary.Show()
                 endIf
