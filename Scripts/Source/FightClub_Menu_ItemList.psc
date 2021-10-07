@@ -1,5 +1,5 @@
 scriptName FightClub_Menu_ItemList
 
-function Show() global
-    
+UIListMenu function GetMenu() global
+    return UIExtensions.GetMenu("UIListMenu") as UIListMenu
 endFunction
