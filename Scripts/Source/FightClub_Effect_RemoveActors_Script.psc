@@ -1,0 +1,1 @@
+scriptName FightClub_Effect_RemoveActors_Script extends ActiveMagicEffect

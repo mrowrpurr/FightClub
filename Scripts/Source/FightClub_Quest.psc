@@ -1,0 +1,1 @@
+scriptName FightClub_Quest extends Quest
