@@ -13,7 +13,7 @@ function Show() global
     int monsterLibrary = 4
     int result = GetMessageBox().Show()
     if result == fights
-        Debug.MessageBox("Sweet, let's organize us some fights")
+        FightClub_Menu_Fights.Show()
     elseIf result == contestants
     elseIf result == teams
     elseIf result == locations
