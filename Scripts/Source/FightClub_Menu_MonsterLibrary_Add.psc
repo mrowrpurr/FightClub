@@ -1,14 +1,6 @@
 scriptName FightClub_Menu_MonsterLibrary_Add
 
 function Show() global
-    string monsterQuery = FightClub_Menu_TextEntry.GetUserText()
-    string consoleResult = FightClub_ConsoleHelper.RunConsoleCommand("help \"" + monsterQuery + "\"")
-    ; string[] consoleResultLines = StringUtil.Split(consoleResult, "\n")
-    ; Debug.MessageBox(consoleResultLines.Length)
-    ; Debug.MessageBox(consoleResultLines)
-endFunction
-
-function Show_ManualFormIDs() global
     string esp = FightClub_Menu_ModChooser.ChooseMod()
     if esp
         string formIdHex = FightClub_Menu_TextEntry.GetUserText()
@@ -34,3 +26,12 @@ function Show_ManualFormIDs() global
         FightClub_Menu_MonsterLibrary.Show()
     endIf
 endFunction
+
+; TODO - Search Console for NPCs
+
+; function Show_ConsoleVersion_WIP() global
+;     string monsterQuery = FightClub_Menu_TextEntry.GetUserText()
+;     string consoleResult = FightClub_ConsoleHelper.RunConsoleCommand("help \"" + monsterQuery + "\"")
+;     ; Form[] monsterForms = FightClub_ConsoleHelper.GetNpcsFromConsoleText(consoleResult)
+;     ; Debug.MessageBox(monsterForms)
+; endFunction
