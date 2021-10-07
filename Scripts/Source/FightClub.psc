@@ -204,10 +204,9 @@ endEvent
 function BeginArrangingFightClubMatch()
     IsArrangingFightClubMatch = true
     ConsoleUtil.ExecuteCommand("tgm")
-    ConsoleUtil.ExecuteCommand("tdetect")
     ConsoleUtil.ExecuteCommand("tcl")
     ConsoleUtil.ExecuteCommand("tcai")
-    ConsoleUtil.ExecuteCommand("sucsm 5")
+    ConsoleUtil.ExecuteCommand("sucsm 10")
     PlayerRef.SetActorValue("speedmult", 350.0)
 endFunction
 
@@ -309,7 +308,6 @@ function BeginFight()
     MakeEveryoneOnEachTeamFriendsWithOneAnother()
     ConsoleUtil.ExecuteCommand("tcl")
     ConsoleUtil.ExecuteCommand("tcai")
-    ConsoleUtil.ExecuteCommand("tdetect")
 endFunction
 
 function MakeEveryoneOnEachTeamFriendsWithOneAnother()
