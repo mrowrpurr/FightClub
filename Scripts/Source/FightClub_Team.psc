@@ -20,6 +20,10 @@ string[] function AllTeamNames() global
     return JMap.allKeysPArray(TeamsData())
 endFunction
 
+int function GetTeamByName(string name) global
+    return JMap.getObj(TeamsData(), name)
+endFunction
+
 int function Create(string name) global
     int team = JMap.object()
     SetName(team, name)

@@ -21,6 +21,10 @@ function Show() global
         else
             Show()
         endIf
+    elseIf result == selectTeam
+        string teamName = FightClub_Menu_ItemList.Choose(FightClub_Team.AllTeamNames())
+        int team = FightClub_Team.GetTeamByName(teamName)
+        FightClub_Menu_Team.Show(team)
     elseIf result == viewTeam
         Debug.MessageBox(FightClub_Team.AllTeamNames())
     elseIf result == removeTeam
