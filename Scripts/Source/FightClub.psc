@@ -221,6 +221,20 @@ int function GetMonsterByIndex(int index)
     return JArray.getObj(Monsters, index)
 endFunction
 
+int function GetMonsterByName(string name)
+    int monsterCount = JArray.count(Monsters)
+    int i = 0
+    while i < monsterCount
+        int monster = GetMonsterByIndex(i)
+        string monsterName = JMap.getStr(monster, "name")
+        if monsterName == name
+            return monster
+        endIf
+        i += 1
+    endWhile
+    return 0
+endFunction
+
 int function AddMonster(ActorBase monster)
     Debug.MessageBox("Add Monster " + monster + " " + monster.GetName())
     int monsterMap = JMap.object()

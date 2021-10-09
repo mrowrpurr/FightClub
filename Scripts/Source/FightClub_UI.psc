@@ -107,47 +107,75 @@ function RenameTeam(FightClub fightClubScript) global
 endFunction
 
 ; TODO - Search!
-function SpawnMonster(FightClub fightClubScript) global
+function SpawnMonster(FightClub fightClubScript, string query = "") global
+    int monsterList = JArray.object()
     UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
-    listMenu.AddEntryItem("[Search Monsters]")
+    if ! query
+        listMenu.AddEntryItem("[Search Monsters]")
+    endIf
     string[] monsterNames = fightClubScript.MonsterNames
     int i = 0
     while i < monsterNames.Length
-        listMenu.AddEntryItem(monsterNames[i])
+        string monsterName = monsterNames[i]
+        if (! query) || (query && StringUtil.Find(monsterName, query) > -1)
+            listMenu.AddEntryItem(monsterName)
+            JArray.addStr(monsterList, monsterName)
+        endIf
         i += 1
     endWhile
+
     listMenu.OpenMenu()
     int result = listMenu.GetResultInt()
-    if result > -1
-        UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
-        textEntry.SetPropertyString("text", "1")
-        textEntry.OpenMenu()
-        int numberOfMonsters = textEntry.GetResultString() as int
-        if ! numberOfMonsters
-            numberOfMonsters = 1
-        endIf
-        int monster = fightClubScript.GetMonsterByIndex(result - 1) ; -1 because of [Search...]
-        Form monsterForm = JMap.getForm(monster, "form")
 
-        listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
-        string[] teamNames = fightClubScript.TeamNames
-        i = 0
-        while i < teamNames.Length
-            listMenu.AddEntryItem(teamNames[i])
-            i += 1
-        endWhile
-        listMenu.OpenMenu()
-        int selection = listMenu.GetResultInt()
-        if selection > -1
-            int team = fightClubScript.GetTeamByIndex(selection)
+    string[] monstersInList = JArray.asStringArray(monsterList)
+
+    if result > -1
+        if result == 0 ; Search
+            UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
+            textEntry.OpenMenu()
+            SpawnMonster(fightClubScript, query = textEntry.GetResultString())
+            return
+        else
+            int offset = 1
+            if query
+                offset = 0
+            endIf
+
+            ; Number of Monsters
+            UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
+            textEntry.SetPropertyString("text", "1")
+            textEntry.OpenMenu()
+            int numberOfMonsters = textEntry.GetResultString() as int
+            if ! numberOfMonsters
+                numberOfMonsters = 1
+            endIf
+
+            ; Get the selected monster
+            string selectedMonsterName = monstersInList[result - offset]
+            int monster = fightClubScript.GetMonsterByName(selectedMonsterName)
+            Form monsterForm = JMap.getForm(monster, "form")
+
+            ; Choose Team
+            listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
+            string[] teamNames = fightClubScript.TeamNames
             i = 0
-            while i < numberOfMonsters
-                Actor monsterInstance = fightClubScript.PlayerRef.PlaceAtMe(monsterForm) as Actor
-                fightClubScript.AddMonsterToTeam(monsterInstance, team)
+            while i < teamNames.Length
+                listMenu.AddEntryItem(teamNames[i])
                 i += 1
             endWhile
-        else
-            MainMenu(fightClubScript)
+            listMenu.OpenMenu()
+            int selection = listMenu.GetResultInt()
+            if selection > -1
+                int team = fightClubScript.GetTeamByIndex(selection)
+                i = 0
+                while i < numberOfMonsters
+                    Actor monsterInstance = fightClubScript.PlayerRef.PlaceAtMe(monsterForm) as Actor
+                    fightClubScript.AddMonsterToTeam(monsterInstance, team)
+                    i += 1
+                endWhile
+            else
+                MainMenu(fightClubScript)
+            endIf
         endIf
     else
         MainMenu(fightClubScript)
