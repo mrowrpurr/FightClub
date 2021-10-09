@@ -127,6 +127,7 @@ endFunction
 
 Form[] function GetMonsterInstancesForTeam(int team)
     int theMonster = GetMonstersForTeam(team)
+    JValue.writeToFile(theMonster, "MonstersForTeam.json")
     int monsterCount = JArray.count(theMonster)
     Form[] monsterInstances = Utility.CreateFormArray(monsterCount)
     int i = 0
@@ -203,9 +204,9 @@ endEvent
 ; Start arranging fight club match
 function BeginArrangingFightClubMatch()
     IsArrangingFightClubMatch = true
-    ConsoleUtil.ExecuteCommand("tgm")
-    ConsoleUtil.ExecuteCommand("tcl")
-    ConsoleUtil.ExecuteCommand("tcai")
+    ; ConsoleUtil.ExecuteCommand("tgm")
+    ; ConsoleUtil.ExecuteCommand("tcl")
+    ; ConsoleUtil.ExecuteCommand("tcai")
     ConsoleUtil.ExecuteCommand("sucsm 10")
     PlayerRef.SetActorValue("speedmult", 350.0)
 endFunction
@@ -221,6 +222,7 @@ endFunction
 int function AddMonster(ActorBase monster)
     int monsterMap = JMap.object()
     JArray.addObj(Monsters, monsterMap)
+    JValue.writeToFile(Monsters, "MonstersAfterAdd.json")
     JMap.setForm(monsterMap, "form", monster)
     string name = monster.GetName()
     if ! name
@@ -237,17 +239,19 @@ function RenameTeam(int team, string newName)
 endFunction
 
 function AddMonsterToTeam(Actor monster, int team)
+    Log("Add Monster To Team: " + monster.GetActorBase().GetName())
+
     ; Remove monster from all existing Factions
     monster.RemoveFromAllFactions()
 
     ; Make them Aggressive. Attack Enemies on sight. Do not attack Neutrals or everyone.
-    monster.SetActorValue("Aggression", 2)
+    monster.SetActorValue("Aggression", 1)
 
     ; Make them Foolhardy; Will never avoid/flee from anyone. 
     monster.SetActorValue("Confidence", 4)
 
-    ; Make them Help Allies. Will not Help Friends who are not Allies.
-    monster.SetActorValue("Assistance", 1)
+    ; Make them not help anyone.
+    monster.SetActorValue("Assistance", 2)
 
     ; Add our custom ability for contestants
     monster.AddSpell(FightClub_ContestantSpell)
@@ -266,7 +270,7 @@ function AddMonsterToTeam(Actor monster, int team)
         Faction thisFaction = factions[i]
         if thisFaction == teamFaction
             monster.AddToFaction(thisFaction)
-            monster.SetFactionRank(thisFaction, 3)
+            monster.SetFactionRank(thisFaction, 0)
         else
             monster.RemoveFromFaction(thisFaction)
         endIF
@@ -305,30 +309,71 @@ function Save()
 endFunction
 
 function BeginFight()
-    MakeEveryoneOnEachTeamFriendsWithOneAnother()
-    ConsoleUtil.ExecuteCommand("tcl")
-    ConsoleUtil.ExecuteCommand("tcai")
+    Log("BEGIN FIGHT")
+    MakeEveryoneLoveAndHateOneAnother()
+    ; ConsoleUtil.ExecuteCommand("tcl")
+    ; ConsoleUtil.ExecuteCommand("tcai")
 endFunction
 
-function MakeEveryoneOnEachTeamFriendsWithOneAnother()
+function Log(string text)
+    Debug.Trace("[FightClub] " + text)
+endFunction
+
+function MakeEveryoneLoveAndHateOneAnother()
+    Log("Make Everyone Love And Hate One Another")
+
     int theTeams = Teams
     int teamCount = JArray.count(theTeams)
     int teamIndex = 0
+
+    ; Go through every team
     while teamIndex < teamCount
         int team = JArray.getObj(theTeams, teamIndex)
         Form[] teamMonsters = GetMonsterInstancesForTeam(team)
+        Debug.MessageBox("Team " + GetTeamName(team) + " Monsters: " + teamMonsters)
+
         int monsterOuterIndex = 0
+
+        ; Go through every monster on the team...
         while monsterOuterIndex < teamMonsters.Length
             int monsterInnerIndex = 0
+            Actor monsterA = teamMonsters[monsterOuterIndex] as Actor
+
+            ; Go through every OTHER monter on the SAME team
+            ; and become friends!
             while monsterInnerIndex < teamMonsters.Length
-                Actor monsterA = teamMonsters[monsterOuterIndex] as Actor
                 Actor monsterB = teamMonsters[monsterInnerIndex] as Actor
                 if monsterA != monsterB
-                    monsterA.SetRelationshipRank(monsterB, 4)
-                    monsterB.SetRelationshipRank(monsterA, 4)
+                    Log("Monster A: " + monsterA)
+                    Log("Monster B: " + monsterB)
+                    monsterA.SetRelationshipRank(monsterB, 3)
+                    monsterB.SetRelationshipRank(monsterA, 3)
+                    Log(monsterA.GetActorBase().GetName() + " " + \
+                        " likes " + monsterB.GetActorBase().GetName())
                 endIf
                 monsterInnerIndex += 1
             endWhile
+
+            ; Go through every other team...
+            int otherTeamIndex = 0
+            while otherTeamIndex < teamCount
+                if otherTeamIndex != teamIndex
+                    int otherTeam = JArray.getObj(theTeams, otherTeamIndex)
+                    Form[] otherTeamMonsters = GetMonsterInstancesForTeam(otherTeam)
+                    int otherTeamMonsterIndex = 0
+                    while otherTeamMonsterIndex < otherTeamMonsters.Length
+                        Log("The Monster: " + monsterA)
+                        Log("Other Monster: " + otherMonster)
+                        Actor otherMonster = otherTeamMonsters[otherTeamMonsterIndex] as Actor
+                        monsterA.SetRelationshipRank(otherMonster, -4)
+                        Log(monsterA.GetActorBase().GetName() + " " + \
+                            " hates " + otherMonster.GetActorBase().GetName())
+                        otherTeamMonsterIndex += 1
+                    endWhile
+                endIf
+                otherTeamIndex += 1
+            endWhile
+
             monsterOuterIndex += 1
         endWhile
         teamIndex += 1
@@ -359,8 +404,8 @@ function TrackDeath(Actor target, Actor killer)
 endFunction
 
 function MatchIsWon(int winningTeam)
-    PauseCombat()
-    Debug.MessageBox(GetTeamName(winningTeam) + " is victorious!")
+    ; PauseCombat()
+    ; Debug.MessageBox(GetTeamName(winningTeam) + " is victorious!")
 endFunction
 
 function PauseCombat()
