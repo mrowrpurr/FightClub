@@ -203,7 +203,9 @@ endEvent
 
 ; Start arranging fight club match
 function BeginArrangingFightClubMatch()
+    ClearTeamMonsters()
     IsArrangingFightClubMatch = true
+    ConsoleUtil.SetSelectedReference(None)
     ConsoleUtil.ExecuteCommand("tgm")
     ConsoleUtil.ExecuteCommand("tcl")
     ConsoleUtil.ExecuteCommand("tdetect")
@@ -236,7 +238,6 @@ int function GetMonsterByName(string name)
 endFunction
 
 int function AddMonster(ActorBase monster)
-    Debug.MessageBox("Add Monster " + monster + " " + monster.GetName())
     int monsterMap = JMap.object()
     JArray.addObj(Monsters, monsterMap)
     JMap.setForm(monsterMap, "form", monster)
@@ -301,6 +302,17 @@ int function GetTeamForMonster(Actor monster)
     return JFormMap.getObj(MonstersToTeams, monster)
 endFunction
 
+function ClearTeamMonsters()
+    int[] theTeamIds = TeamIds
+    int i = 0
+    while i < theTeamIds.Length
+        int team = theTeamIds[i]
+        JValue.release(JMap.getObj(team, "monsters"))
+        JMap.setObj(team, "monsters", JArray.object())
+        i += 1
+    endWhile
+endFunction
+
 Faction[] function AllFactions()
     Faction[] factions = new Faction[8]
     factions[0] = FightClub_Team1
@@ -328,6 +340,7 @@ endFunction
 function BeginFight()
     Log("BEGIN FIGHT")
     MakeEveryoneLoveAndHateOneAnother()
+    ConsoleUtil.SetSelectedReference(None)
     ConsoleUtil.ExecuteCommand("tai")
     ConsoleUtil.ExecuteCommand("tcai")
     ConsoleUtil.ExecuteCommand("tdetect")
@@ -348,7 +361,6 @@ function MakeEveryoneLoveAndHateOneAnother()
     while teamIndex < teamCount
         int team = JArray.getObj(theTeams, teamIndex)
         Form[] teamMonsters = GetMonsterInstancesForTeam(team)
-        Debug.MessageBox("Team " + GetTeamName(team) + " Monsters: " + teamMonsters)
 
         int monsterOuterIndex = 0
 
@@ -427,6 +439,7 @@ function MatchIsWon(int winningTeam)
 endFunction
 
 function PauseCombat()
+    ConsoleUtil.SetSelectedReference(None)
     ConsoleUtil.ExecuteCommand("tcai")
 endFunction
 
