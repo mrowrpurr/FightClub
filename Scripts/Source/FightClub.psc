@@ -220,15 +220,16 @@ int function GetMonsterByIndex(int index)
 endFunction
 
 int function AddMonster(ActorBase monster)
+    Debug.MessageBox("Add Monster " + monster + " " + monster.GetName())
     int monsterMap = JMap.object()
     JArray.addObj(Monsters, monsterMap)
-    JValue.writeToFile(Monsters, "MonstersAfterAdd.json")
     JMap.setForm(monsterMap, "form", monster)
     string name = monster.GetName()
     if ! name
         name = monster.GetName()
     endIf
     JMap.setStr(monsterMap, "name", name)
+    JValue.writeToFile(Monsters, "MonstersAfterAdd.json")
     Save()
     return monsterMap
 endFunction
@@ -251,7 +252,7 @@ function AddMonsterToTeam(Actor monster, int team)
     monster.SetActorValue("Confidence", 4)
 
     ; Make them not help anyone.
-    monster.SetActorValue("Assistance", 2)
+    monster.SetActorValue("Assistance", 1)
 
     ; Add our custom ability for contestants
     monster.AddSpell(FightClub_ContestantSpell)
