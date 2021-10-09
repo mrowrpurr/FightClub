@@ -204,9 +204,11 @@ endEvent
 ; Start arranging fight club match
 function BeginArrangingFightClubMatch()
     IsArrangingFightClubMatch = true
-    ; ConsoleUtil.ExecuteCommand("tgm")
-    ; ConsoleUtil.ExecuteCommand("tcl")
-    ; ConsoleUtil.ExecuteCommand("tcai")
+    ConsoleUtil.ExecuteCommand("tgm")
+    ConsoleUtil.ExecuteCommand("tcl")
+    ConsoleUtil.ExecuteCommand("tdetect")
+    ConsoleUtil.ExecuteCommand("tcai")
+    ConsoleUtil.ExecuteCommand("tai")
     ConsoleUtil.ExecuteCommand("sucsm 10")
     PlayerRef.SetActorValue("speedmult", 350.0)
 endFunction
@@ -312,8 +314,9 @@ endFunction
 function BeginFight()
     Log("BEGIN FIGHT")
     MakeEveryoneLoveAndHateOneAnother()
-    ; ConsoleUtil.ExecuteCommand("tcl")
-    ; ConsoleUtil.ExecuteCommand("tcai")
+    ConsoleUtil.ExecuteCommand("tai")
+    ConsoleUtil.ExecuteCommand("tcai")
+    ConsoleUtil.ExecuteCommand("tdetect")
 endFunction
 
 function Log(string text)
