@@ -173,10 +173,9 @@ Actor property PlayerRef auto
 Spell property FightClub_MenuSpell auto
 
 ; Messages
-Message property FightClub_MainMenu                auto
-Message property FightClub_MainMenu_NoMonster      auto
-Message property FightClub_MainMenu_WithMonster    auto
-Message property FightClub_MainMenu_ManageMonsters auto
+Message property FightClub_MainMenu                 auto
+Message property FightClub_MainMenu_OrganizingFight auto
+Message property FightClub_MainMenu_ManageMonsters  auto
 
 ; Used to set Message text
 ; See `FightClub_UI.SetMessageBoxText()`
@@ -194,6 +193,11 @@ Faction property FightClub_Team8 auto
 
 ; The spell/ability which is added to all contestants
 Spell property FightClub_ContestantSpell auto
+
+; Variables
+GlobalVariable property FightClub_IsPreparingForFight auto
+GlobalVariable property FightClub_IsFightInProgress auto
+GlobalVariable property FightClub_IsFightOver auto
 
 ; Install the mod for the first time
 event OnInit()
@@ -409,12 +413,14 @@ endFunction
 
 function MatchIsWon(int winningTeam)
     ; PauseCombat()
-    ; Debug.MessageBox(GetTeamName(winningTeam) + " is victorious!")
+    Debug.MessageBox(GetTeamName(winningTeam) + " is victorious!")
 endFunction
 
-function PauseCombat()
-    ConsoleUtil.ExecuteCommand("tcai")
-endFunction
+; function PauseCombat()
+;     ConsoleUtil.ExecuteCommand("tcai")
+;     ConsoleUtil.ExecuteCommand("tcai")
+;     ConsoleUtil.ExecuteCommand("tcai")
+; endFunction
 
 function TrackHit(Actor target, Actor attacker, Form weaponOrSpell)
     ; TODO

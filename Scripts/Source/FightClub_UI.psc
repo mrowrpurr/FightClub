@@ -22,22 +22,13 @@ function FightClub_MainMenu(FightClub fightClubScript) global
 endFunction
 
 function ShowActivelyArrangingFightClubMatchMenu(FightClub fightClubScript) global
-    Actor selectedMonster = Game.GetCurrentCrosshairRef() as Actor
-    if selectedMonster
-        FightClub_MainMenu_WithMonster(fightClubScript, selectedMonster)    
-    else
-        FightClub_MainMenu_NoMonster(fightClubScript)
-    endIf
-endFunction
-
-function FightClub_MainMenu_NoMonster(FightClub fightClubScript) global
     SetMessageBoxText(fightClubScript, "No monster selected")
     int fight = 0
     int spawnMonster = 1
     int manageMonsters = 2
     int renameTeam = 3
     int quit = 4
-    int result = fightClubScript.FightClub_MainMenu_NoMonster.Show()
+    int result = fightClubScript.FightClub_MainMenu_OrganizingFight.Show()
     if result == fight
         Debug.MessageBox("Fight!")
         fightClubScript.BeginFight()
