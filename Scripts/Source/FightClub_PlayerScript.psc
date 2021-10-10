@@ -1,1 +1,0 @@
-Scriptname FightClub_PlayerScript extends ReferenceAlias  
