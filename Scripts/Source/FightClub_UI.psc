@@ -2,10 +2,6 @@ scriptName FightClub_UI
 {Manages the UI for Fight Club}
 
 function MainMenu(FightClub fightClubScript, Actor selectedMonster = None) global
-    ; TESTING TODO REMOVE
-    JValue.writeToFile(fightClubScript.BattleData, "Data\\FightClub\\BattleData.json")
-    JValue.writeToFile(fightClubScript.Data, "Data\\FightClub\\Data.json")
-
     if fightClubScript.IsFightCurrentlyInProgress
         if fightClubScript.CurrentWinningTeam
             FightClub_Menu_PrepareForNextFight(fightClubScript)
@@ -207,8 +203,11 @@ function AddMonster(FightClub fightClubScript) global
         int monster = ConsoleSearch.GetNthResultInCategory(results, "NPC_", i)
         string name = ConsoleSearch.GetResultName(monster)
         string formId = ConsoleSearch.GetResultFormID(monster)
-        JArray.addStr(monsterFormsIds, formId)
-        listMenu.AddEntryItem(name)
+        ActorBase monsterBase = FormHelper.HexToForm(formId) as ActorBase
+        if monsterBase
+            JArray.addForm(monsterFormsIds, monsterBase)
+            listMenu.AddEntryItem(name)
+        endIf
         i += 1
     endWhile
 
@@ -217,15 +216,9 @@ function AddMonster(FightClub fightClubScript) global
     int result = listMenu.GetResultInt()
 
     if result > -1
-        string formId = JArray.getStr(monsterFormsIds, result)
-        Form theForm = FormHelper.HexToForm(formId)
-        ActorBase monsterBase = FormHelper.HexToForm(formId) as ActorBase
-        if monsterBase
-            Debug.MessageBox("Added " + monsterBase.GetName())
-            fightClubScript.AddMonster(monsterBase)
-        else
-            Debug.MessageBox(formId + " " + theForm + " is not an ActorBase")
-        endIf
+        ActorBase monsterBase = JArray.getForm(monsterFormsIds, result) as ActorBase
+        Debug.MessageBox("Added " + monsterBase.GetName())
+        fightClubScript.AddMonster(monsterBase)
     endIf
 
     ManageMonsters(fightClubScript)
