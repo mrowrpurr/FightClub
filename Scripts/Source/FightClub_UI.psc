@@ -16,12 +16,15 @@ function MainMenu(FightClub fightClubScript, Actor selectedMonster = None) globa
 endFunction
 
 function FightClub_MainMenu(FightClub fightClubScript) global
-    int beginArranging = 0
     SetMessageBoxText(fightClubScript, "")
+    int beginArranging = 0
+    int monsterLibrary = 1
     int result = fightClubScript.FightClub_MainMenu.Show()
     if result == beginArranging
         fightClubScript.BeginArrangingFightClubMatch()
         MainMenu(fightClubScript)
+    elseIf result == monsterLibrary
+        ManageMonsters(fightClubScript)
     endIf
 endFunction
 
@@ -105,7 +108,8 @@ function SpawnMonster(FightClub fightClubScript, string query = "") global
     int monsterList = JArray.object()
     UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
     if ! query
-        listMenu.AddEntryItem("[Search Monsters]")
+        listMenu.AddEntryItem("[Search All Monsters]")
+        listMenu.AddEntryItem("[Search Monster Library]")
     endIf
     string[] monsterNames = fightClubScript.MonsterNames
     int i = 0
@@ -124,15 +128,32 @@ function SpawnMonster(FightClub fightClubScript, string query = "") global
     string[] monstersInList = JArray.asStringArray(monsterList)
 
     if result > -1
-        if ! query && result == 0 ; Search
+        if ! query && result == 1 ; Search
             UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
             textEntry.OpenMenu()
             SpawnMonster(fightClubScript, query = textEntry.GetResultString())
             return
         else
-            int offset = 1
+            int offset = 2
             if query
-                offset = 0
+                offset = 1
+            endIf
+
+            ; Get the selected monster
+            ActorBase monsterForm
+            string selectedMonsterName
+            if result == 0 ; Search for the monster
+                monsterForm = SearchForMonster()
+                selectedMonsterName = monsterForm.GetName()
+            else
+                selectedMonsterName = monstersInList[result - offset]
+                int monster = fightClubScript.GetMonsterByName(selectedMonsterName)
+                monsterForm = JMap.getForm(monster, "form") as ActorBase
+            endIf
+
+            if ! monsterForm
+                Debug.MessageBox("Could not get monster " + selectedMonsterName + "\n\nPlease try again! It will probably work.")
+                return
             endIf
 
             ; Number of Monsters
@@ -142,16 +163,6 @@ function SpawnMonster(FightClub fightClubScript, string query = "") global
             int numberOfMonsters = textEntry.GetResultString() as int
             if ! numberOfMonsters
                 numberOfMonsters = 1
-            endIf
-
-            ; Get the selected monster
-            string selectedMonsterName = monstersInList[result - offset]
-            int monster = fightClubScript.GetMonsterByName(selectedMonsterName)
-            Form monsterForm = JMap.getForm(monster, "form")
-
-            if ! monsterForm
-                Debug.MessageBox("Could not get monster " + selectedMonsterName + "\n\nPlease try again! It will probably work.")
-                return
             endIf
 
             ; Choose Team
@@ -186,13 +197,18 @@ function SpawnMonster(FightClub fightClubScript, string query = "") global
 endFunction
 
 function AddMonster(FightClub fightClubScript) global
+    ActorBase monsterbase = SearchForMonster()
+    Debug.MessageBox("Added " + monsterBase.GetName())
+    fightClubScript.AddMonster(monsterBase)
+endFunction
+
+ActorBase function SearchForMonster() global
     string query = GetUserText()
     int results = ConsoleSearch.Search(query)
     int monsterCount = ConsoleSearch.GetResultCategoryCount(results, "NPC_")
     if ! monsterCount
         Debug.MessageBox("No monsters found matching " + query)
-        ManageMonsters(fightClubScript)
-        return
+        return None
     endIf
 
     UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
@@ -217,36 +233,88 @@ function AddMonster(FightClub fightClubScript) global
 
     if result > -1
         ActorBase monsterBase = JArray.getForm(monsterFormsIds, result) as ActorBase
-        Debug.MessageBox("Added " + monsterBase.GetName())
-        fightClubScript.AddMonster(monsterBase)
+        return monsterBase
+    else
+        return None
+    endIf
+endFunction
+
+function ManageMonsters(FightClub fightClubScript) global
+    int add = 0
+    int rename = 1
+    int remove = 2
+    int result = fightClubScript.FightClub_MainMenu_ManageMonsters.Show()
+    if result == add
+        AddMonster(fightClubScript)
+    elseIf result == rename
+        RenameMonster(fightClubScript)        
+    elseIf result == remove
+        RemoveMonster(fightClubScript)
+    else
+        MainMenu(fightClubScript)
+    endIf
+endFunction
+
+function RenameMonster(FightClub fightClubScript) global
+    UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
+
+    string[] monsterNames = fightClubScript.MonsterNames
+    int i = 0
+    while i < monsterNames.Length
+        string monsterName = monsterNames[i]
+        listMenu.AddEntryItem(monsterName)
+        i += 1
+    endWhile
+
+    listMenu.OpenMenu()
+    int result = listMenu.GetResultInt()
+
+    if result > -1
+        int monster = JArray.getObj(fightClubScript.Monsters, result)
+        string name = JMap.getStr(monster, "name")
+        string newName = GetUserText(name)
+        if newName
+            JMap.setStr(monster, "name", newName)
+            Debug.MessageBox("Renamed " + name + "  to " + newName)
+        endIf
     endIf
 
     ManageMonsters(fightClubScript)
 endFunction
 
-function ManageMonsters(FightClub fightClubScript) global
-    int spawn = 0
-    int add = 1
-    int rename = 2
-    int remove = 3
-    int result = fightClubScript.FightClub_MainMenu_ManageMonsters.Show()
-    if result == spawn
-        SpawnMonster(fightClubScript)
-    elseIf result == add
-        AddMonster(fightClubScript)
-    elseIf result == rename
-    elseIf result == remove
-    else
-        MainMenu(fightClubScript)
+function RemoveMonster(FightClub fightClubScript) global
+    UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
+
+    string[] monsterNames = fightClubScript.MonsterNames
+    int i = 0
+    while i < monsterNames.Length
+        string monsterName = monsterNames[i]
+        listMenu.AddEntryItem(monsterName)
+        i += 1
+    endWhile
+
+    listMenu.OpenMenu()
+    int result = listMenu.GetResultInt()
+
+    if result > -1
+        int monster = JArray.getObj(fightClubScript.Monsters, result)
+        string name = JMap.getStr(monster, "name")
+        JArray.eraseObject(fightClubScript.Monsters, monster)
+        Debug.MessageBox("Removed " + name)
     endIf
+
+    ManageMonsters(fightClubScript)
 endFunction
 
 function SetMessageBoxText(FightClub fightClubScript, string text) global
     fightClubScript.FightClub_MessageText_BaseForm.SetName("~ Welcome to Fight Club ~\n\n" + text)
 endFunction
 
-string function GetUserText() global
+string function GetUserText(string defaultText = "") global
     UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
+    if defaultText
+        textEntry.SetPropertyString("text", defaultText)
+    endIf
     textEntry.OpenMenu()
     return textEntry.GetResultString()
 endFunction

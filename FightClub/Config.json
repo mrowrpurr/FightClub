@@ -1,0 +1,46 @@
+{
+  "monsters": [
+    {
+      "Form": "__formData|Skyrim.esm|0x13bbf",
+      "name": "Nazeem"
+    },
+    {
+      "Form": "__formData|Skyrim.esm|0x1347d",
+      "name": "Hod"
+    }
+  ],
+  "teams": [
+    {
+      "monsters": [],
+      "name": "Team 1"
+    },
+    {
+      "monsters": [],
+      "name": "Team 2"
+    },
+    {
+      "monsters": [],
+      "name": "Team 3"
+    },
+    {
+      "monsters": [],
+      "name": "Team 4"
+    },
+    {
+      "monsters": [],
+      "name": "Team 5"
+    },
+    {
+      "monsters": [],
+      "name": "Team 6"
+    },
+    {
+      "monsters": [],
+      "name": "Team 7"
+    },
+    {
+      "monsters": [],
+      "name": "Team 8"
+    }
+  ]
+}
