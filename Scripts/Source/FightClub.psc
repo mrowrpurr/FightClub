@@ -179,6 +179,7 @@ Message property FightClub_MainMenu_NoMonster       auto
 Message property FightClub_MainMenu_WithMonster     auto
 Message property FightClub_MainMenu_ManageMonsters  auto
 Message property FightClub_Menu_PrepareForNextFight auto
+Message property FightClub_Menu_FightInProgress     auto
 
 ; Used to set Message text
 ; See `FightClub_UI.SetMessageBoxText()`
@@ -197,6 +198,9 @@ Faction property FightClub_Friends auto
 
 ; The spell/ability which is added to all contestants
 Spell property FightClub_ContestantSpell auto
+
+; For showing either the Pause or Unpause button
+GlobalVariable property FightClub_IsFightPaused auto
 
 ; Install the mod for the first time
 event OnInit()
@@ -261,7 +265,9 @@ function RenameTeam(int team, string newName)
 endFunction
 
 function AddMonsterToTeam(Actor monster, int team)
-    Log("Add Monster To Team: " + monster.GetActorBase().GetName())
+    Log("Add Monster To Team "  + GetTeamName(team) + ": " + monster.GetActorBase().GetName())
+
+    monster.SetName(GetTeamName(team) + " " + GetMonsterName(monster))
 
     ; Remove monster from all existing Factions
     monster.RemoveFromAllFactions()
@@ -341,18 +347,41 @@ function Save()
     JValue.writeToFile(Data, FIGHT_CLUB_CONFIG_FILE)
 endFunction
 
+bool IsCurrentlyPreparingFight
+bool IsFightingWithNoWinnerYet
+
 function BeginFight()
     Debug.MessageBox("Fight Loading...")
+    IsCurrentlyPreparingFight = true
+    RegisterForSingleUpdate(1.0)
     IsFightCurrentlyInProgress = true
-    RegisterForSingleUpdate(1)
+    IsFightingWithNoWinnerYet = true
+    RegisterForSingleUpdate(3)
     MakeEveryoneLoveAndHateOneAnother()
     ConsoleUtil.SetSelectedReference(None)
     ConsoleUtil.ExecuteCommand("tai")
     ConsoleUtil.ExecuteCommand("tcai")
     ConsoleUtil.ExecuteCommand("tdetect")
     ConsoleUtil.ExecuteCommand("tcl")
+    IsCurrentlyPreparingFight = false
     Debug.MessageBox("Fight!")
 endFunction
+
+event OnUpdate()
+    bool runAgain = IsCurrentlyPreparingFight || IsFightingWithNoWinnerYet
+    if IsCurrentlyPreparingFight
+        Debug.Notification("Setting up fight...")
+    endIf
+    if IsFightingWithNoWinnerYet
+        int winningTeam = GetWinningTeam()
+        if winningTeam
+            MatchIsWon(winningTeam)
+        endIf
+    endIf
+    if runAgain
+        RegisterForSingleUpdate(3)
+    endIf
+endEvent
 
 function Log(string text)
     Debug.Trace("[FightClub] " + text)
@@ -432,6 +461,9 @@ string function GetMonsterName(Actor monster)
 endFunction
 
 function TrackDeath(Actor target, Actor killer)
+    if CurrentWinningTeam
+        return
+    endIf
     int targetTeam = GetTeamForMonster(target)
     int killerTeam = GetTeamForMonster(killer)
     Debug.Notification(GetTeamName(killerTeam) + "'s " + \
@@ -450,11 +482,23 @@ function MatchIsWon(int winningTeam)
     PauseCombat()
     Debug.MessageBox(GetTeamName(winningTeam) + " is victorious!")
     CurrentWinningTeam = winningTeam
+    IsFightingWithNoWinnerYet = false
 endFunction
 
 function PauseCombat()
     ConsoleUtil.SetSelectedReference(None)
+    ConsoleUtil.ExecuteCommand("tai")
     ConsoleUtil.ExecuteCommand("tcai")
+    ConsoleUtil.ExecuteCommand("tdetect")
+    ConsoleUtil.ExecuteCommand("tcl")
+endFunction
+
+function UnpauseCombat()
+    ConsoleUtil.SetSelectedReference(None)
+    ConsoleUtil.ExecuteCommand("tai")
+    ConsoleUtil.ExecuteCommand("tcai")
+    ConsoleUtil.ExecuteCommand("tdetect")
+    ConsoleUtil.ExecuteCommand("tcl")
 endFunction
 
 function TrackHit(Actor target, Actor attacker, Form weaponOrSpell)
@@ -466,18 +510,58 @@ int function GetWinningTeam()
     int[] theTeamIds = TeamIds
     int i = 0
     while i < theTeamIds.Length
+        int actuallyDead = JArray.object()
+
         int remainingTeamMembers = GetAliveMonstersForTeam(theTeamIds[i])
+        int remainingTeamMemberCount = JArray.count(remainingTeamMembers)
+        int j = 0
+        while j < remainingTeamMemberCount
+            Actor teamMember = JArray.getForm(remainingTeamMembers, j) as Actor
+            if ! teamMember || teamMember.IsDead() || teamMember.IsDisabled() || teamMember.IsDeleted()
+                JArray.addForm(actuallyDead, teamMember)
+            endIf
+            j += 1
+        endWhile
+
+        int actuallyDeadCount = JArray.count(actuallyDead)
+        if actuallyDeadCount > 0
+            j = 0
+            while j < actuallyDeadCount
+                Form isDead = JArray.getForm(actuallyDead, j)
+                JArray.eraseForm(remainingTeamMembers, isDead)
+                j += 1
+            endWhile
+        endIf
+
         if JArray.count(remainingTeamMembers) > 0
             JArray.addObj(remainingTeams, theTeamIds[i])
         endIf
+
         i += 1
     endWhile
+
     int remainingTeamCount = JArray.count(remainingTeams)
     if remainingTeamCount == 1
-        return JArray.getObj(remainingTeams, 0)
+        int winningTeam = JArray.getObj(remainingTeams, 0)
+        CurrentWinningTeam = winningTeam
+        return winningTeam
     else
         return 0
     endIf
+endFunction
+
+function ResetAllTeams()
+    int[] allTeamIds = TeamIds
+    int i = 0
+    while i < allTeamIds.Length
+        int team = allTeamIds[i]
+        CleanupTeam(team)
+        i += 1
+    endWhile
+    IsFightCurrentlyInProgress = false
+    CurrentWinningTeam = 0
+    ClearTeamMonsters()
+    Debug.MessageBox("All teams have been reset")
 endFunction
 
 function PrepareForNextFight()
@@ -488,28 +572,35 @@ function PrepareForNextFight()
         if team == CurrentWinningTeam
             RestoreWinningTeam(team)
         else
-            CleanupLosingTeam(team)
+            CleanupTeam(team)
         endIf
         i += 1
     endWhile
+    IsFightCurrentlyInProgress = false
+    CurrentWinningTeam = 0
 endFunction
 
 function RestoreWinningTeam(int team)
     Form[] monsterInstances = GetMonsterInstancesForTeam(team)
     int i = 0
     while i < monsterInstances.Length
-        ObjectReference monsterInstance = monsterInstances[i] as ObjectReference
-        monsterInstance.SetScale(3.0)
+        Actor monsterInstance = monsterInstances[i] as Actor
+        if monsterInstance.IsDead()
+            monsterInstance.Resurrect()
+            monsterInstance.Reset()
+            monsterInstance.SetActorValue("health", monsterInstance.GetBaseActorValue("health"))
+        endIf
         i += 1
     endWhile
 endFunction
 
-function CleanupLosingTeam(int team)
+function CleanupTeam(int team)
     Form[] monsterInstances = GetMonsterInstancesForTeam(team)
     int i = 0
     while i < monsterInstances.Length
-        ObjectReference monsterInstance = monsterInstances[i] as ObjectReference
+        Actor monsterInstance = monsterInstances[i] as Actor
         monsterInstance.Delete()
         i += 1
     endWhile
+    JArray.clear(team)
 endFunction

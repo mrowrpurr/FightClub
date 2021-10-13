@@ -2,14 +2,18 @@ scriptName FightClub_UI
 {Manages the UI for Fight Club}
 
 function MainMenu(FightClub fightClubScript, Actor selectedMonster = None) global
+    ; TESTING TODO REMOVE
+    JValue.writeToFile(fightClubScript.BattleData, "Data\\FightClub\\BattleData.json")
+    JValue.writeToFile(fightClubScript.Data, "Data\\FightClub\\Data.json")
+
     if fightClubScript.IsFightCurrentlyInProgress
         if fightClubScript.CurrentWinningTeam
             FightClub_Menu_PrepareForNextFight(fightClubScript)
         else
-            Debug.MessageBox("Fight is still in progress...")
+            FightClub_Menu_FightInProgress(fightClubScript)
         endIf
     elseIf fightClubScript.IsArrangingFightClubMatch
-        ShowActivelyArrangingFightClubMatchMenu(fightClubScript)
+        FightClub_MainMenu_FightSetupMenu(fightClubScript)
     else
         FightClub_MainMenu(fightClubScript)
     endIf
@@ -25,49 +29,18 @@ function FightClub_MainMenu(FightClub fightClubScript) global
     endIf
 endFunction
 
-function ShowActivelyArrangingFightClubMatchMenu(FightClub fightClubScript) global
-    Actor selectedMonster = Game.GetCurrentCrosshairRef() as Actor
-    if selectedMonster
-        FightClub_MainMenu_WithMonster(fightClubScript, selectedMonster)    
-    else
-        FightClub_MainMenu_NoMonster(fightClubScript)
-    endIf
-endFunction
-
-function FightClub_MainMenu_NoMonster(FightClub fightClubScript) global
-    SetMessageBoxText(fightClubScript, "No monster selected")
+function FightClub_MainMenu_FightSetupMenu(FightClub fightClubScript) global
     int fight = 0
     int spawnMonster = 1
     int manageMonsters = 2
     int renameTeam = 3
-    int quit = 4
+    int resetFight = 4
+    int quit = 5
     int result = fightClubScript.FightClub_MainMenu_NoMonster.Show()
     if result == fight
         fightClubScript.BeginFight()
-    elseIf result == spawnMonster
-        SpawnMonster(fightClubScript)
-    elseIf result == manageMonsters
-        ManageMonsters(fightClubScript)
-    elseIf result == renameTeam
-        RenameTeam(fightClubScript)
-    elseIf result == quit
-    endIf
-endFunction
-
-function FightClub_MainMenu_WithMonster(FightClub fightClubScript, Actor monster) global
-    SetMessageBoxText(fightClubScript, "The current monster selected is: " + monster.GetActorBase().GetName())
-    int editMonster = 0
-    int duplicateMonster = 1
-    int fight = 2
-    int spawnMonster = 3
-    int manageMonsters = 4
-    int renameTeam = 5
-    int quit = 6
-    int result = fightClubScript.FightClub_MainMenu_WithMonster.Show()
-    if result == editMonster
-    elseIf result == duplicateMonster
-    elseIf result == fight
-        fightClubScript.BeginFight()
+    elseIf result == resetFight
+        fightClubScript.ResetAllTeams()
     elseIf result == spawnMonster
         SpawnMonster(fightClubScript)
     elseIf result == manageMonsters
@@ -80,9 +53,27 @@ endFunction
 
 function FightClub_Menu_PrepareForNextFight(FightClub fightClubScript) global
     int prepare = 0
+    int resetAll = 1
     int result = fightClubScript.FightClub_Menu_PrepareForNextFight.Show()
     if result == prepare
         fightClubScript.PrepareForNextFight()
+    elseIf result == resetAll
+        fightClubScript.ResetAllTeams()
+    endIf
+endFunction
+
+function FightClub_Menu_FightInProgress(FightClub fightClubScript) global
+    int pause = 0
+    int unpause = 1
+    int resetAll = 2
+    int result = fightClubScript.FightClub_Menu_FightInProgress.Show()
+    if result == pause
+        fightClubScript.PauseCombat()
+    elseIf result == unpause
+        fightClubScript.UnpauseCombat()
+    elseIf result == resetAll
+        fightClubScript.ResetAllTeams()
+        fightClubScript.BeginArrangingFightClubMatch()
     endIf
 endFunction
 
@@ -162,6 +153,11 @@ function SpawnMonster(FightClub fightClubScript, string query = "") global
             int monster = fightClubScript.GetMonsterByName(selectedMonsterName)
             Form monsterForm = JMap.getForm(monster, "form")
 
+            if ! monsterForm
+                Debug.MessageBox("Could not get monster " + selectedMonsterName + "\n\nPlease try again! It will probably work.")
+                return
+            endIf
+
             ; Choose Team
             listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
             string[] teamNames = fightClubScript.TeamNames
@@ -177,6 +173,10 @@ function SpawnMonster(FightClub fightClubScript, string query = "") global
                 i = 0
                 while i < numberOfMonsters
                     Actor monsterInstance = fightClubScript.PlayerRef.PlaceAtMe(monsterForm) as Actor
+                    if ! monsterInstance
+                        Debug.MessageBox("Failed to place " + selectedMonsterName + " at player\n\nPlease try again. It will probably work.")
+                        return
+                    endIf
                     fightClubScript.AddMonsterToTeam(monsterInstance, team)
                     i += 1
                 endWhile
@@ -218,9 +218,7 @@ function AddMonster(FightClub fightClubScript) global
 
     if result > -1
         string formId = JArray.getStr(monsterFormsIds, result)
-        Debug.MessageBox(formId)
         Form theForm = FormHelper.HexToForm(formId)
-        Debug.MessageBox(theForm)
         ActorBase monsterBase = FormHelper.HexToForm(formId) as ActorBase
         if monsterBase
             Debug.MessageBox("Added " + monsterBase.GetName())
