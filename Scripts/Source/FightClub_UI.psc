@@ -104,7 +104,6 @@ function RenameTeam(FightClub fightClubScript) global
     endIf
 endFunction
 
-; TODO - Search!
 function SpawnMonster(FightClub fightClubScript, string query = "") global
     int monsterList = JArray.object()
     UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
@@ -128,7 +127,7 @@ function SpawnMonster(FightClub fightClubScript, string query = "") global
     string[] monstersInList = JArray.asStringArray(monsterList)
 
     if result > -1
-        if result == 0 ; Search
+        if ! query && result == 0 ; Search
             UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
             textEntry.OpenMenu()
             SpawnMonster(fightClubScript, query = textEntry.GetResultString())
