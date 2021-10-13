@@ -337,14 +337,29 @@ function Save()
     JValue.writeToFile(Data, FIGHT_CLUB_CONFIG_FILE)
 endFunction
 
+int _secondsUntilFight
+
 function BeginFight()
-    Log("BEGIN FIGHT")
+    Debug.Notification("Fighting in...")
+    _secondsUntilFight = 5
+    RegisterForSingleUpdate(1)
     MakeEveryoneLoveAndHateOneAnother()
     ConsoleUtil.SetSelectedReference(None)
     ConsoleUtil.ExecuteCommand("tai")
     ConsoleUtil.ExecuteCommand("tcai")
     ConsoleUtil.ExecuteCommand("tdetect")
+    Debug.MessageBox("Fight!")
 endFunction
+
+event OnUpdate()
+    if _secondsUntilFight
+        Debug.Notification(_secondsUntilFight + " ...")
+        _secondsUntilFight -= 1
+        if _secondsUntilFight > 0
+            RegisterForUpdate(1)
+        endIf
+    endIf
+endEvent
 
 function Log(string text)
     Debug.Trace("[FightClub] " + text)
@@ -425,6 +440,11 @@ endFunction
 
 function TrackDeath(Actor target, Actor killer)
     int targetTeam = GetTeamForMonster(target)
+    int killerTeam = GetTeamForMonster(killer)
+    Debug.Notification(GetTeamName(killerTeam) + "'s " + \
+        GetMonsterName(killer) + " killed " + \
+        GetTeamName(targetTeam) + "'s " + \
+        GetMonsterName(target))
     int aliveMonstersOnTeam = GetAliveMonstersForTeam(targetTeam)
     JArray.eraseForm(aliveMonstersOnTeam, target)
     int winningTeam = GetWinningTeam()
@@ -434,8 +454,8 @@ function TrackDeath(Actor target, Actor killer)
 endFunction
 
 function MatchIsWon(int winningTeam)
-    ; PauseCombat()
-    ; Debug.MessageBox(GetTeamName(winningTeam) + " is victorious!")
+    PauseCombat()
+    Debug.MessageBox(GetTeamName(winningTeam) + " is victorious!")
 endFunction
 
 function PauseCombat()

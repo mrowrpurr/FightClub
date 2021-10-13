@@ -39,7 +39,6 @@ function FightClub_MainMenu_NoMonster(FightClub fightClubScript) global
     int quit = 4
     int result = fightClubScript.FightClub_MainMenu_NoMonster.Show()
     if result == fight
-        Debug.MessageBox("Fight!")
         fightClubScript.BeginFight()
     elseIf result == spawnMonster
         SpawnMonster(fightClubScript)
@@ -64,7 +63,6 @@ function FightClub_MainMenu_WithMonster(FightClub fightClubScript, Actor monster
     if result == editMonster
     elseIf result == duplicateMonster
     elseIf result == fight
-        Debug.MessageBox("Fight!")
         fightClubScript.BeginFight()
     elseIf result == spawnMonster
         SpawnMonster(fightClubScript)
