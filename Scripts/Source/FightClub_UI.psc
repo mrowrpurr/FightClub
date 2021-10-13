@@ -48,7 +48,6 @@ function FightClub_MainMenu_NoMonster(FightClub fightClubScript) global
     elseIf result == renameTeam
         RenameTeam(fightClubScript)
     elseIf result == quit
-        QuitFightClub(fightClubScript)
     endIf
 endFunction
 
@@ -74,7 +73,6 @@ function FightClub_MainMenu_WithMonster(FightClub fightClubScript, Actor monster
     elseIf result == renameTeam
         RenameTeam(fightClubScript)
     elseIf result == quit
-        QuitFightClub(fightClubScript)
     endIf
 endFunction
 
@@ -183,104 +181,47 @@ function SpawnMonster(FightClub fightClubScript, string query = "") global
 endFunction
 
 function AddMonster(FightClub fightClubScript) global
-    string esp = ChooseESP()
-    if esp
-        UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
-        textEntry.SetPropertyString("text", "")
-        textEntry.OpenMenu()
-
-        string formId = textEntry.GetResultString()
-        if formId
-            Form monsterForm = Game.GetFormFromFile(FormHelper.HexToDecimal(formId), esp)
-            if monsterForm
-                ActorBase monster = monsterForm as ActorBase
-                if monster
-                    fightClubScript.AddMonster(monster)
-                    Debug.MessageBox("Added monster " + monster.GetName())
-                    ManageMonsters(fightClubScript)
-                else
-                    Debug.MessageBox("Form " + formId + " " + monsterForm.GetName() + " in " + esp + " is not an Actor")
-                    MainMenu(fightClubScript)
-                endIf
-            else
-                Debug.MessageBox("Could not find Form in " + esp + " with Form ID " + formId + "\n\nReminder: do not include the mod order prefix, e.g. FE003 or 04")
-                MainMenu(fightClubScript)
-            endIf
-        else
-            Debug.MessageBox("You did not enter a form ID")
-            MainMenu(fightClubScript)
-        endIf
-    else
-        Debug.MessageBox("You did not choose an ESP/ESM")
-        MainMenu(fightClubScript)
+    string query = GetUserText()
+    int results = ConsoleSearch.Search(query)
+    int monsterCount = ConsoleSearch.GetResultCategoryCount(results, "NPC_")
+    if ! monsterCount
+        Debug.MessageBox("No monsters found matching " + query)
+        ManageMonsters(fightClubScript)
+        return
     endIf
-endFunction
 
-string function ChooseESP(string espQuery = "") global
-    UIListMenu listMenu = uiextensions.GetMenu("UIListMenu") as UIListMenu
-
-    string[] allEsps = GetAllEspNames(espQuery)
-
-    if ! espQuery
-        listMenu.AddEntryItem("[Search for ESP/ESM]")
-    endIf
+    UIListMenu listMenu = UIExtensions.GetMenu("UIListMenu") as UIListMenu
+    int monsterFormsIds = JArray.object()
 
     int i = 0
-    while i < allEsps.Length
-        listMenu.AddEntryItem(allEsps[i])
+    while i < monsterCount
+        int monster = ConsoleSearch.GetNthResultInCategory(results, "NPC_", i)
+        string name = ConsoleSearch.GetResultName(monster)
+        string formId = ConsoleSearch.GetResultFormID(monster)
+        JArray.addStr(monsterFormsIds, formId)
+        listMenu.AddEntryItem(name)
         i += 1
     endWhile
-    
+
     listMenu.OpenMenu()
-    int selectedIndex = listMenu.GetResultInt()
 
-    if selectedIndex > -1
-        if espQuery
-            return allEsps[selectedIndex]
+    int result = listMenu.GetResultInt()
+
+    if result > -1
+        string formId = JArray.getStr(monsterFormsIds, result)
+        Debug.MessageBox(formId)
+        Form theForm = FormHelper.HexToForm(formId)
+        Debug.MessageBox(theForm)
+        ActorBase monsterBase = FormHelper.HexToForm(formId) as ActorBase
+        if monsterBase
+            Debug.MessageBox("Added " + monsterBase.GetName())
+            fightClubScript.AddMonster(monsterBase)
         else
-            if selectedIndex == 0
-                UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
-                textEntry.OpenMenu()
-                return ChooseESP(textEntry.GetResultString())
-            else
-                return allEsps[selectedIndex - 1]
-            endIf
+            Debug.MessageBox(formId + " " + theForm + " is not an ActorBase")
         endIf
-    else
-        return ""
     endIf
-endFunction
 
-string[] function GetAllEspNames(string nameQuery = "") global
-    int espNames = JArray.object()
-
-    int numberOfMods = Game.GetModCount()
-    int index = 0
-    while index < numberOfMods
-        string modName = Game.GetModName(index)
-        if (nameQuery && StringUtil.Find(modName, nameQuery) > -1) || ! nameQuery
-            JArray.addStr(espNames, modName)
-        endIf
-        index += 1
-    endWhile
-
-    int numberOfLightMods = Game.GetLightModCount()
-    index = 0
-    while index < numberOfLightMods
-        string modName = Game.GetLightModName(index)
-        if (nameQuery && StringUtil.Find(modName, nameQuery) > -1) || ! nameQuery
-            JArray.addStr(espNames, modName)
-        endIf
-        index += 1
-    endWhile
-
-    return JArray.asStringArray(espNames)
-endFunction
-
-function RenameMonster(FightClub fightClubScript) global
-endFunction
-
-function RemoveMonster(FightClub fightClubScript) global
+    ManageMonsters(fightClubScript)
 endFunction
 
 function ManageMonsters(FightClub fightClubScript) global
@@ -294,17 +235,18 @@ function ManageMonsters(FightClub fightClubScript) global
     elseIf result == add
         AddMonster(fightClubScript)
     elseIf result == rename
-        RenameMonster(fightClubScript)
     elseIf result == remove
-        RemoveMonster(fightClubScript)
     else
         MainMenu(fightClubScript)
     endIf
 endFunction
 
-function QuitFightClub(FightClub fightClubScript) global
-endFunction
-
 function SetMessageBoxText(FightClub fightClubScript, string text) global
     fightClubScript.FightClub_MessageText_BaseForm.SetName("~ Welcome to Fight Club ~\n\n" + text)
+endFunction
+
+string function GetUserText() global
+    UITextEntryMenu textEntry = UIExtensions.GetMenu("UITextEntryMenu") as UITextEntryMenu
+    textEntry.OpenMenu()
+    return textEntry.GetResultString()
 endFunction

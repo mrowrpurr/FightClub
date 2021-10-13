@@ -24,6 +24,7 @@
         <!-- These mods come with source directories by default with required .psc files -->
         <Import>@ImportsFolder\JContainers\Scripts\Source</Import>
         <Import>@ModsFolder\FormHelper\Scripts\Source</Import>
+        <Import>@ModsFolder\ConsoleSearch\Scripts\Source</Import>
         <!-- <Import>@ModsFolder\LibFire\Scripts\Source</Import> -->
         <!-- <Import>@ModsFolder\iWantWidgets\Source\Scripts</Import> -->
         <!-- <Import>@ModsFolder\iWantStatusBars\Source\Scripts</Import> -->
@@ -31,7 +32,7 @@
 
         <!-- These mods DO NOT come with loose .psc files or are not "mods" and need to be setup manually  -->
         <!-- <Import>@ImportsFolder\SkyUI_5.1_SDK\Scripts\Source</Import> -->
-        <Import>@ImportsFolder\ConsoleUtil</Import>
+        <Import>@ImportsFolder\ConsoleUtil\Scripts\Source</Import>
         <Import>@ImportsFolder\UIExtensions\scripts\source</Import>
 
         <!-- Change this to be your default Skyrim install directory's Scripts\Source path  -->
