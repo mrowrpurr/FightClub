@@ -3,7 +3,11 @@ scriptName FightClub_UI
 
 function MainMenu(FightClub fightClubScript, Actor selectedMonster = None) global
     if fightClubScript.IsFightCurrentlyInProgress
-        Debug.MessageBox("Stop match etc")
+        if fightClubScript.CurrentWinningTeam
+            FightClub_Menu_PrepareForNextFight(fightClubScript)
+        else
+            Debug.MessageBox("Fight is still in progress...")
+        endIf
     elseIf fightClubScript.IsArrangingFightClubMatch
         ShowActivelyArrangingFightClubMatchMenu(fightClubScript)
     else
@@ -71,6 +75,14 @@ function FightClub_MainMenu_WithMonster(FightClub fightClubScript, Actor monster
     elseIf result == renameTeam
         RenameTeam(fightClubScript)
     elseIf result == quit
+    endIf
+endFunction
+
+function FightClub_Menu_PrepareForNextFight(FightClub fightClubScript) global
+    int prepare = 0
+    int result = fightClubScript.FightClub_Menu_PrepareForNextFight.Show()
+    if result == prepare
+        fightClubScript.PrepareForNextFight()
     endIf
 endFunction
 

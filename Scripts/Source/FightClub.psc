@@ -165,6 +165,7 @@ endProperty
 ; The current state which Fight Club is in
 bool property IsArrangingFightClubMatch  auto
 bool property IsFightCurrentlyInProgress auto
+int  property CurrentWinningTeam         auto 
 
 ; Player
 Actor property PlayerRef auto
@@ -173,24 +174,26 @@ Actor property PlayerRef auto
 Spell property FightClub_MenuSpell auto
 
 ; Messages
-Message property FightClub_MainMenu                auto
-Message property FightClub_MainMenu_NoMonster      auto
-Message property FightClub_MainMenu_WithMonster    auto
-Message property FightClub_MainMenu_ManageMonsters auto
+Message property FightClub_MainMenu                 auto
+Message property FightClub_MainMenu_NoMonster       auto
+Message property FightClub_MainMenu_WithMonster     auto
+Message property FightClub_MainMenu_ManageMonsters  auto
+Message property FightClub_Menu_PrepareForNextFight auto
 
 ; Used to set Message text
 ; See `FightClub_UI.SetMessageBoxText()`
 Form property FightClub_MessageText_BaseForm auto
 
 ; Factions representing different teams
-Faction property FightClub_Team1 auto
-Faction property FightClub_Team2 auto
-Faction property FightClub_Team3 auto
-Faction property FightClub_Team4 auto
-Faction property FightClub_Team5 auto
-Faction property FightClub_Team6 auto
-Faction property FightClub_Team7 auto
-Faction property FightClub_Team8 auto
+Faction property FightClub_Team1   auto
+Faction property FightClub_Team2   auto
+Faction property FightClub_Team3   auto
+Faction property FightClub_Team4   auto
+Faction property FightClub_Team5   auto
+Faction property FightClub_Team6   auto
+Faction property FightClub_Team7   auto
+Faction property FightClub_Team8   auto
+Faction property FightClub_Friends auto
 
 ; The spell/ability which is added to all contestants
 Spell property FightClub_ContestantSpell auto
@@ -199,6 +202,7 @@ Spell property FightClub_ContestantSpell auto
 event OnInit()
     PlayerRef.EquipSpell(FightClub_MenuSpell, 0)
     PlayerRef.EquipSpell(FightClub_MenuSpell, 1)
+    PlayerRef.AddToFaction(FightClub_Friends)
 endEvent
 
 ; Start arranging fight club match
@@ -337,29 +341,18 @@ function Save()
     JValue.writeToFile(Data, FIGHT_CLUB_CONFIG_FILE)
 endFunction
 
-int _secondsUntilFight
-
 function BeginFight()
-    Debug.Notification("Fighting in...")
-    _secondsUntilFight = 5
+    Debug.MessageBox("Fight Loading...")
+    IsFightCurrentlyInProgress = true
     RegisterForSingleUpdate(1)
     MakeEveryoneLoveAndHateOneAnother()
     ConsoleUtil.SetSelectedReference(None)
     ConsoleUtil.ExecuteCommand("tai")
     ConsoleUtil.ExecuteCommand("tcai")
     ConsoleUtil.ExecuteCommand("tdetect")
+    ConsoleUtil.ExecuteCommand("tcl")
     Debug.MessageBox("Fight!")
 endFunction
-
-event OnUpdate()
-    if _secondsUntilFight
-        Debug.Notification(_secondsUntilFight + " ...")
-        _secondsUntilFight -= 1
-        if _secondsUntilFight > 0
-            RegisterForUpdate(1)
-        endIf
-    endIf
-endEvent
 
 function Log(string text)
     Debug.Trace("[FightClub] " + text)
@@ -456,6 +449,7 @@ endFunction
 function MatchIsWon(int winningTeam)
     PauseCombat()
     Debug.MessageBox(GetTeamName(winningTeam) + " is victorious!")
+    CurrentWinningTeam = winningTeam
 endFunction
 
 function PauseCombat()
@@ -484,4 +478,38 @@ int function GetWinningTeam()
     else
         return 0
     endIf
+endFunction
+
+function PrepareForNextFight()
+    int[] allTeamIds = TeamIds
+    int i = 0
+    while i < allTeamIds.Length
+        int team = allTeamIds[i]
+        if team == CurrentWinningTeam
+            RestoreWinningTeam(team)
+        else
+            CleanupLosingTeam(team)
+        endIf
+        i += 1
+    endWhile
+endFunction
+
+function RestoreWinningTeam(int team)
+    Form[] monsterInstances = GetMonsterInstancesForTeam(team)
+    int i = 0
+    while i < monsterInstances.Length
+        ObjectReference monsterInstance = monsterInstances[i] as ObjectReference
+        monsterInstance.SetScale(3.0)
+        i += 1
+    endWhile
+endFunction
+
+function CleanupLosingTeam(int team)
+    Form[] monsterInstances = GetMonsterInstancesForTeam(team)
+    int i = 0
+    while i < monsterInstances.Length
+        ObjectReference monsterInstance = monsterInstances[i] as ObjectReference
+        monsterInstance.Delete()
+        i += 1
+    endWhile
 endFunction
